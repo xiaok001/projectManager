@@ -5,9 +5,9 @@ spring:
   application:
     name: project-manager
   datasource:
-    url: jdbc:mysql://192.168.4.195:3306/project_manager?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
-    username: superdba
-    password: 4oQ336oNpMhjCbP02N4oSV
+    url: jdbc:mysql://localhost:3306/project_manager?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
@@ -15,8 +15,8 @@ spring:
   mail:
     host: smtp.163.com
     port: 465
-    username: nieyankang0205@163.com
-    password: ABCabc123
+    username: your-email@163.com
+    password: your-smtp-auth-code
     properties:
       mail.smtp.auth: true
       mail.smtp.ssl.enable: true
@@ -36,7 +36,7 @@ mybatis-plus:
 
 # JWT配置
 jwt:
-  secret: PMSystemSecretKey2026!@#PMSystemSecretKey2026!@#
+  secret: your-jwt-secret-key-change-it
   expiration: 86400000  # 24小时
 
 # AI配置
