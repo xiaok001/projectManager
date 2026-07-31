@@ -16,10 +16,13 @@ spring:
     host: smtp.163.com
     port: 465
     username: nieyankang0205@163.com
-    password: ABCabc123
+    password: AThu2uTxbpKNVB3p
     properties:
       mail.smtp.auth: true
       mail.smtp.ssl.enable: true
+      mail.smtp.from: nieyankang0205@163.com
+      mail.smtp.socketFactory.class: javax.net.ssl.SSLSocketFactory
+      mail.smtp.socketFactory.port: 465
 
 mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
@@ -41,14 +44,14 @@ jwt:
 
 # AI配置
 ai:
-  provider: deepseek
+  provider: ollama
   deepseek:
     api-key: ${AI_DEEPSEEK_API_KEY:}
     base-url: https://api.deepseek.com
     model: deepseek-chat
   ollama:
-    base-url: http://localhost:11434
-    model: qwen2.5:14b
+    base-url: http://192.168.4.161:11434
+    model: qwen2.5:7b
 
 logging:
   level:
