@@ -36,14 +36,14 @@ public class OperationLogAspect {
         MODULE_MAP.put("projects", "项目");
         MODULE_MAP.put("risks", "风险");
         MODULE_MAP.put("stages", "阶段");
-        MODULE_MAP.put("users", "用户");
-        MODULE_MAP.put("config", "配置");
+        MODULE_MAP.put("users", "系统管理");
+        MODULE_MAP.put("config", "系统管理");
         MODULE_MAP.put("auth", "认证");
         MODULE_MAP.put("dashboard", "仪表盘");
         MODULE_MAP.put("ai-suggestions", "AI建议");
         MODULE_MAP.put("change-logs", "变更日志");
         MODULE_MAP.put("email-digests", "邮件摘要");
-        MODULE_MAP.put("operation-logs", "操作日志");
+        MODULE_MAP.put("operation-logs", "系统管理");
     }
 
     /** HTTP方法操作映射 */
@@ -66,6 +66,11 @@ public class OperationLogAspect {
         }
 
         HttpServletRequest request = attributes.getRequest();
+
+        // 跳过GET查询请求，只记录增删改操作
+        if ("GET".equalsIgnoreCase(request.getMethod())) {
+            return joinPoint.proceed();
+        }
 
         // 跳过AuthController.login，登录日志单独处理
         String className = joinPoint.getTarget().getClass().getSimpleName();

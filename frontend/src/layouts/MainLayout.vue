@@ -30,18 +30,24 @@
           <el-icon><Document /></el-icon>
           <template #title>报告</template>
         </el-menu-item>
-        <el-menu-item v-if="userStore.isDeptManager" index="/config">
-          <el-icon><Setting /></el-icon>
-          <template #title>系统配置</template>
-        </el-menu-item>
-        <el-menu-item v-if="userStore.isDeptManager" index="/users">
-          <el-icon><UserFilled /></el-icon>
-          <template #title>用户管理</template>
-        </el-menu-item>
-        <el-menu-item v-if="userStore.isDeptManager" index="/logs">
-          <el-icon><Notebook /></el-icon>
-          <template #title>操作日志</template>
-        </el-menu-item>
+        <el-sub-menu v-if="userStore.isDeptManager" index="system">
+          <template #title>
+            <el-icon><Setting /></el-icon>
+            <span>系统管理</span>
+          </template>
+          <el-menu-item index="/config">
+            <el-icon><Setting /></el-icon>
+            <template #title>系统配置</template>
+          </el-menu-item>
+          <el-menu-item index="/users">
+            <el-icon><UserFilled /></el-icon>
+            <template #title>用户管理</template>
+          </el-menu-item>
+          <el-menu-item index="/logs">
+            <el-icon><Notebook /></el-icon>
+            <template #title>操作日志</template>
+          </el-menu-item>
+        </el-sub-menu>
       </el-menu>
     </el-aside>
 

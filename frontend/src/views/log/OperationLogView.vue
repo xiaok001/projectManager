@@ -10,9 +10,9 @@
               <el-option value="项目" label="项目" />
               <el-option value="阶段" label="阶段" />
               <el-option value="风险" label="风险" />
-              <el-option value="用户" label="用户" />
-              <el-option value="配置" label="配置" />
-              <el-option value="系统" label="系统" />
+              <el-option value="系统管理" label="系统管理" />
+              <el-option value="认证" label="认证" />
+              <el-option value="AI建议" label="AI建议" />
             </el-select>
             <el-select v-model="filterOperation" placeholder="操作类型" clearable style="width:130px" @change="loadData">
               <el-option value="" label="全部类型" />
@@ -21,7 +21,6 @@
               <el-option value="删除" label="删除" />
               <el-option value="登录" label="登录" />
               <el-option value="登出" label="登出" />
-              <el-option value="查询" label="查询" />
             </el-select>
           </div>
         </div>
