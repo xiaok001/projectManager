@@ -1,0 +1,68 @@
+/* 全局样式 */
+:root {
+  --primary-color: #409eff;
+  --success-color: #67c23a;
+  --warning-color: #e6a23c;
+  --danger-color: #f56c6c;
+  --info-color: #909399;
+  --bg-color: #f5f7fa;
+}
+
+body {
+  background-color: var(--bg-color);
+}
+
+.page-container {
+  padding: 20px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 健康度颜色 */
+.health-green {
+  color: #67c23a;
+  font-weight: bold;
+}
+
+.health-yellow {
+  color: #e6a23c;
+  font-weight: bold;
+}
+
+.health-red {
+  color: #f56c6c;
+  font-weight: bold;
+}
+
+/* 停滞标记 */
+.stale-tag {
+  color: #f56c6c;
+  font-weight: bold;
+}
+
+/* 面包屑 */
+.breadcrumb-container {
+  margin-bottom: 16px;
+}
+
+/* 统计卡片 */
+.stat-card {
+  text-align: center;
+  padding: 16px;
+}
+
+.stat-card .stat-value {
+  font-size: 28px;
+  font-weight: bold;
+  line-height: 1.4;
+}
+
+.stat-card .stat-label {
+  font-size: 13px;
+  color: #909399;
+  margin-top: 4px;
+}
