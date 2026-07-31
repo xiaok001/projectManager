@@ -13,8 +13,10 @@ public class ProjectChangeLog {
     @TableId(type = IdType.AUTO)
     private Long id;
     private Long projectId;
-    /** 变更类型: 人员变更/内容变更/范围变更/其他 */
+    /** 变更类型: 人员变更/内容变更/范围变更/风险变更/其他 */
     private String changeType;
+    /** 变更字段名 */
+    private String changeField;
     /** 变更内容描述 */
     private String changeDesc;
     /** 变更前 */

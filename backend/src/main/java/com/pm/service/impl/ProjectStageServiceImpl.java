@@ -48,12 +48,18 @@ public class ProjectStageServiceImpl extends ServiceImpl<ProjectStageMapper, Pro
             throw new BusinessException("阶段不存在");
         }
 
+        if (dto.getStageName() != null) stage.setStageName(dto.getStageName());
         if (dto.getPlanStart() != null) stage.setPlanStart(dto.getPlanStart());
         if (dto.getPlanEnd() != null) stage.setPlanEnd(dto.getPlanEnd());
         if (dto.getActualStart() != null) stage.setActualStart(dto.getActualStart());
         if (dto.getActualEnd() != null) stage.setActualEnd(dto.getActualEnd());
         if (dto.getStatus() != null) stage.setStatus(dto.getStatus());
         if (dto.getRemark() != null) stage.setRemark(dto.getRemark());
+        if (dto.getPlanManDays() != null) stage.setPlanManDays(dto.getPlanManDays());
+        if (dto.getActualManDays() != null) stage.setActualManDays(dto.getActualManDays());
+        if (dto.getPlanCost() != null) stage.setPlanCost(dto.getPlanCost());
+        if (dto.getActualCost() != null) stage.setActualCost(dto.getActualCost());
+        if (dto.getProgress() != null) stage.setProgress(dto.getProgress());
         stage.setUpdatedBy(operatorId);
 
         // 如果实际结束日期已填且状态不是已完成，自动更新为已完成

@@ -14,6 +14,9 @@ public class ChangeLogDTO {
     @NotBlank(message = "变更描述不能为空")
     private String changeDesc;
 
+    /** 变更字段名(如: 风险等级、负责人、处理措施等) */
+    private String changeField;
+
     private String beforeValue;
     private String afterValue;
 }

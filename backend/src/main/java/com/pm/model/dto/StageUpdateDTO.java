@@ -1,7 +1,7 @@
 package com.pm.model.dto;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
@@ -9,10 +9,16 @@ import java.time.LocalDate;
  */
 @Data
 public class StageUpdateDTO {
+    private String stageName;
     private LocalDate planStart;
     private LocalDate planEnd;
     private LocalDate actualStart;
     private LocalDate actualEnd;
     private String status;
     private String remark;
+    private BigDecimal planManDays;
+    private BigDecimal actualManDays;
+    private BigDecimal planCost;
+    private BigDecimal actualCost;
+    private Integer progress;
 }

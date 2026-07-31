@@ -2,6 +2,7 @@ package com.pm.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -26,6 +27,16 @@ public class ProjectStage {
     private String status;
     /** 备注(AI风险探测数据源) */
     private String remark;
+    /** 预估人天 */
+    private BigDecimal planManDays;
+    /** 实际人天 */
+    private BigDecimal actualManDays;
+    /** 预估成本(元) */
+    private BigDecimal planCost;
+    /** 实际成本(元) */
+    private BigDecimal actualCost;
+    /** 完成进度(0-100%) */
+    private Integer progress;
     private Long updatedBy;
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
