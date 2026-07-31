@@ -101,6 +101,7 @@ export const configApi = {
 // ============ 邮件摘要接口 ============
 export const digestApi = {
   sendNow: () => api.post('/digest/send-now'),
+  testEmail: (email: string) => api.post(`/digest/test?email=${encodeURIComponent(email)}`),
   logs: (pageNum = 1, pageSize = 10) =>
     api.get('/digest/logs', { params: { pageNum, pageSize } }),
 }

@@ -19,7 +19,11 @@
           <el-time-picker v-model="digestTime" format="HH:mm" value-format="HH:mm" placeholder="选择时间" />
         </el-form-item>
         <el-form-item label="收件人邮箱">
-          <el-input v-model="configMap.digest_recipient_emails" placeholder="多个邮箱用逗号分隔" />
+          <el-input v-model="configMap.digest_recipient_emails" placeholder="多个邮箱用逗号分隔">
+            <template #append>
+              <el-button :loading="testingEmail" @click="handleTestEmail">测试发送</el-button>
+            </template>
+          </el-input>
         </el-form-item>
 
         <el-divider content-position="left">健康评分权重（之和必须100%）</el-divider>
@@ -103,6 +107,7 @@ import { configApi, digestApi } from '../../api'
 const loading = ref(false)
 const saving = ref(false)
 const logsLoading = ref(false)
+const testingEmail = ref(false)
 const configMap = ref<Record<string, string | number>>({})
 const digestTime = ref('09:30')
 const logs = ref<any[]>([])
@@ -153,6 +158,22 @@ async function handleSave() {
     ElMessage.success('配置保存成功')
   } catch (e) { /* ignore */ }
   saving.value = false
+}
+
+async function handleTestEmail() {
+  const emails = (configMap.value.digest_recipient_emails as string || '').trim()
+  if (!emails) {
+    ElMessage.warning('请先输入收件人邮箱')
+    return
+  }
+  // 取第一个邮箱测试
+  const testAddr = emails.split(',')[0].trim()
+  testingEmail.value = true
+  try {
+    await digestApi.testEmail(testAddr)
+    ElMessage.success(`测试邮件已发送至 ${testAddr}，请检查收件箱`)
+  } catch (e) { /* handled by interceptor */ }
+  testingEmail.value = false
 }
 
 async function loadLogs() {
