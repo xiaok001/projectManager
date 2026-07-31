@@ -435,9 +435,14 @@ const saveStage = async () => {
     stageDialogVisible.value = false
     ElMessage.success('阶段已更新')
     try {
-      await ElMessageBox.confirm('本次更新是否涉及人员或项目内容变更？', '提示', {
-        confirmButtonText: '是，去登记', cancelButtonText: '否', type: 'question',
-      })
+      await ElMessageBox.confirm(
+        '本次更新是否涉及人员或项目内容变更？',
+        '提示',
+        {
+          confirmButtonText: '是，去登记',
+          cancelButtonText: '否',
+        }
+      )
       activeTab.value = 'changes'
       openChangeDialog()
     } catch { /* 否 */ }
