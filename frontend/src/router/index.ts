@@ -62,6 +62,18 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/config/ConfigView.vue'),
         meta: { title: '系统配置', icon: 'Setting' },
       },
+      {
+        path: 'users',
+        name: 'UserManagement',
+        component: () => import('../views/user/UserManagementView.vue'),
+        meta: { title: '用户管理', icon: 'UserFilled', roles: ['DEPT_MANAGER'] },
+      },
+      {
+        path: 'logs',
+        name: 'OperationLog',
+        component: () => import('../views/log/OperationLogView.vue'),
+        meta: { title: '操作日志', icon: 'Notebook', roles: ['DEPT_MANAGER'] },
+      },
     ],
   },
 ]

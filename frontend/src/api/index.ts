@@ -120,4 +120,19 @@ export const aiSuggestionApi = {
   ignore: (id: number) => api.post(`/ai-suggestions/${id}/ignore`),
 }
 
+// ============ 用户管理接口 ============
+export const userApi = {
+  list: () => api.get('/users'),
+  detail: (id: number) => api.get(`/users/${id}`),
+  create: (data: any) => api.post('/users', data),
+  update: (id: number, data: any) => api.put(`/users/${id}`, data),
+  delete: (id: number) => api.delete(`/users/${id}`),
+}
+
+// ============ 操作日志接口 ============
+export const operationLogApi = {
+  list: (params: { pageNum?: number; pageSize?: number; module?: string; operation?: string }) =>
+    api.get('/operation-logs', { params }),
+}
+
 export default api

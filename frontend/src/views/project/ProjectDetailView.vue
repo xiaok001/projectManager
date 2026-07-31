@@ -376,7 +376,7 @@ const changeForm = reactive({
 })
 
 // --- Tab ---
-const activeTab = ref('stages')
+const activeTab = ref((route.query.tab as string) || 'stages')
 
 // --- Helpers ---
 const levelTagType = (level: number): 'danger' | 'warning' | 'info' => {

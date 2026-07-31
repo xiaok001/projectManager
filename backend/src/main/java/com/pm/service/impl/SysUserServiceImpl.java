@@ -4,13 +4,14 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pm.common.exception.BusinessException;
 import com.pm.mapper.SysUserMapper;
 import com.pm.model.dto.LoginDTO;
+import com.pm.model.dto.UserDTO;
 import com.pm.model.entity.SysUser;
 import com.pm.model.vo.LoginVO;
 import com.pm.security.JwtUtil;
 import com.pm.service.SysUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,7 +22,7 @@ import java.util.List;
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
 
     private final JwtUtil jwtUtil;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public LoginVO login(LoginDTO dto) {
@@ -66,5 +67,71 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         return lambdaQuery()
                 .eq(SysUser::getUsername, username)
                 .one();
+    }
+
+    @Override
+    public SysUser createUser(UserDTO dto) {
+        // Check username uniqueness
+        SysUser existing = getByUsername(dto.getUsername());
+        if (existing != null) {
+            throw new BusinessException("用户名已存在");
+        }
+
+        SysUser user = new SysUser();
+        user.setUsername(dto.getUsername());
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setRealName(dto.getRealName());
+        user.setEmail(dto.getEmail());
+        user.setPhone(dto.getPhone());
+        user.setRole(dto.getRole());
+        user.setStatus(dto.getStatus());
+
+        save(user);
+        log.info("创建用户成功: userId={}, username={}", user.getId(), user.getUsername());
+        return user;
+    }
+
+    @Override
+    public SysUser updateUser(Long id, UserDTO dto) {
+        SysUser user = getById(id);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+
+        // Check username uniqueness if changed
+        if (!user.getUsername().equals(dto.getUsername())) {
+            SysUser existing = getByUsername(dto.getUsername());
+            if (existing != null) {
+                throw new BusinessException("用户名已存在");
+            }
+        }
+
+        user.setUsername(dto.getUsername());
+        // Only encode password if provided
+        if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+        user.setRealName(dto.getRealName());
+        user.setEmail(dto.getEmail());
+        user.setPhone(dto.getPhone());
+        user.setRole(dto.getRole());
+        user.setStatus(dto.getStatus());
+
+        updateById(user);
+        log.info("更新用户成功: userId={}", user.getId());
+        return user;
+    }
+
+    @Override
+    public void deleteUser(Long id) {
+        SysUser user = getById(id);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+
+        // Logical delete by setting status to 0
+        user.setStatus(0);
+        updateById(user);
+        log.info("删除用户成功: userId={}", id);
     }
 }

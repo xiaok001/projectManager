@@ -159,6 +159,29 @@ CREATE TABLE IF NOT EXISTS project_change_log (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='项目变更记录表';
 
 -- -----------------------------------------------------------
+-- 9. 操作日志表
+-- -----------------------------------------------------------
+CREATE TABLE IF NOT EXISTS operation_log (
+    id              BIGINT          NOT NULL AUTO_INCREMENT COMMENT '主键',
+    module          VARCHAR(50)     NOT NULL COMMENT '操作模块: 项目/阶段/风险/用户/配置/系统',
+    operation       VARCHAR(20)     NOT NULL COMMENT '操作类型: 新增/修改/删除/登录/登出/导出',
+    description     VARCHAR(500)    DEFAULT NULL COMMENT '操作描述',
+    operator_id     BIGINT          DEFAULT NULL COMMENT '操作人ID',
+    operator_name   VARCHAR(50)     DEFAULT NULL COMMENT '操作人姓名',
+    request_method  VARCHAR(10)     DEFAULT NULL COMMENT '请求方法: GET/POST/PUT/DELETE',
+    request_url     VARCHAR(300)    DEFAULT NULL COMMENT '请求URL',
+    request_params  TEXT            DEFAULT NULL COMMENT '请求参数',
+    response_code   INT             DEFAULT NULL COMMENT '响应状态码',
+    ip              VARCHAR(50)     DEFAULT NULL COMMENT '操作IP',
+    execution_time  BIGINT          DEFAULT NULL COMMENT '执行耗时(ms)',
+    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
+    PRIMARY KEY (id),
+    KEY idx_operator (operator_id),
+    KEY idx_module (module),
+    KEY idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='操作日志表';
+
+-- -----------------------------------------------------------
 -- 初始数据: 系统配置
 -- -----------------------------------------------------------
 INSERT INTO system_config (config_key, config_value, description) VALUES
