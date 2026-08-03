@@ -102,6 +102,10 @@ const router = createRouter({
 
 // 路由守卫
 router.beforeEach((to, _from, next) => {
+  // 动态标题：系统名称 + 页面名称
+  const title = to.meta.title as string
+  document.title = title ? `${title} - 多项目管理系统` : '多项目管理系统'
+
   const token = localStorage.getItem('token')
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
