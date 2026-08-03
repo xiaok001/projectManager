@@ -13,6 +13,8 @@ public class SysRole {
     private Integer sortOrder;
     private Integer status;
     private String remark;
+    /** 数据权限: all=全部项目 custom=指定项目 */
+    private String dataScope;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
     @TableField(fill = FieldFill.INSERT_UPDATE)

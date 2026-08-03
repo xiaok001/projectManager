@@ -9,6 +9,7 @@ import com.pm.model.dto.ProjectDTO;
 import com.pm.model.entity.*;
 import com.pm.service.ProjectService;
 import com.pm.service.ProjectStageService;
+import com.pm.service.SysRoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,8 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     private final ProjectMapper projectMapper;
     private final ProjectStageService projectStageService;
     private final SysUserMapper sysUserMapper;
+    private final SysRoleService roleService;
+    private final SysRoleProjectMapper roleProjectMapper;
     private final ProjectStageMapper projectStageMapper;
     private final ProjectRiskMapper projectRiskMapper;
     private final ProjectChangeLogMapper changeLogMapper;
@@ -88,15 +91,31 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     public List<Project> listProjects(Long userId, String role) {
         LambdaQueryWrapper<Project> wrapper = new LambdaQueryWrapper<>();
 
-        // DEPT_MANAGER sees all projects; PM sees only their own
+        // 部门经理 + 全部数据权限 → 看所有项目
+        // 否则按角色的数据权限过滤
         if (!Constants.ROLE_DEPT_MANAGER.equals(role)) {
-            wrapper.eq(Project::getPmId, userId);
+            // 查用户的角色数据权限
+            SysUser user = sysUserMapper.selectById(userId);
+            if (user != null && user.getRoleId() != null) {
+                SysRole userRole = roleService.getById(user.getRoleId());
+                if (userRole != null && "custom".equals(userRole.getDataScope())) {
+                    // 自定义数据权限：只看指定项目
+                    List<Long> projectIds = roleService.getRoleProjectIds(user.getRoleId());
+                    if (projectIds.isEmpty()) {
+                        return new java.util.ArrayList<>();
+                    }
+                    wrapper.in(Project::getId, projectIds);
+                } else {
+                    // 默认：PM只看自己负责的项目
+                    wrapper.eq(Project::getPmId, userId);
+                }
+            } else {
+                wrapper.eq(Project::getPmId, userId);
+            }
         }
         wrapper.orderByDesc(Project::getCreatedAt);
 
         List<Project> projects = list(wrapper);
-
-        // Populate pmName by joining with sys_user
         fillPmNames(projects);
         return projects;
     }

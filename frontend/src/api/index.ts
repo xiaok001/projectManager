@@ -143,6 +143,9 @@ export const roleApi = {
   getPermissions: (id: number) => api.get(`/roles/${id}/permissions`),
   assignPermissions: (id: number, permissionIds: number[]) =>
     api.put(`/roles/${id}/permissions`, { permissionIds }),
+  getDataScope: (id: number) => api.get(`/roles/${id}/data-scope`),
+  assignDataScope: (id: number, dataScope: string, projectIds: number[]) =>
+    api.put(`/roles/${id}/data-scope`, { dataScope, projectIds }),
 }
 
 // ============ 权限接口 ============

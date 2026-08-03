@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pm.common.exception.BusinessException;
 import com.pm.mapper.SysRoleMapper;
 import com.pm.mapper.SysRolePermissionMapper;
+import com.pm.mapper.SysRoleProjectMapper;
 import com.pm.mapper.SysUserMapper;
 import com.pm.model.entity.SysRole;
 import com.pm.model.entity.SysRolePermission;
+import com.pm.model.entity.SysRoleProject;
 import com.pm.model.entity.SysUser;
 import com.pm.service.SysRoleService;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
 
     private final SysRolePermissionMapper rolePermMapper;
+    private final SysRoleProjectMapper roleProjectMapper;
     private final SysUserMapper userMapper;
 
     @Override
@@ -85,6 +88,37 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
             rp.setRoleId(roleId);
             rp.setPermissionId(permId);
             rolePermMapper.insert(rp);
+        }
+    }
+
+    @Override
+    public List<Long> getRoleProjectIds(Long roleId) {
+        return roleProjectMapper.selectList(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<SysRoleProject>()
+                        .eq(SysRoleProject::getRoleId, roleId))
+                .stream().map(SysRoleProject::getProjectId).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void assignDataScope(Long roleId, String dataScope, List<Long> projectIds) {
+        SysRole role = getById(roleId);
+        if (role == null) throw new BusinessException("角色不存在");
+        // 更新数据权限类型
+        role.setDataScope(dataScope);
+        updateById(role);
+        // 先删除旧的项目关联
+        roleProjectMapper.delete(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<SysRoleProject>()
+                        .eq(SysRoleProject::getRoleId, roleId));
+        // 如果是自定义权限，插入指定项目
+        if ("custom".equals(dataScope) && projectIds != null) {
+            for (Long pid : projectIds) {
+                SysRoleProject rp = new SysRoleProject();
+                rp.setRoleId(roleId);
+                rp.setProjectId(pid);
+                roleProjectMapper.insert(rp);
+            }
         }
     }
 }

@@ -24,11 +24,19 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="remark" label="备注" min-width="160" show-overflow-tooltip />
-        <el-table-column label="操作" width="240" fixed="right">
+        <el-table-column prop="dataScope" label="数据权限" width="100">
+          <template #default="{ row }">
+            <el-tag :type="row.dataScope === 'all' ? 'success' : 'warning'" size="small">
+              {{ row.dataScope === 'all' ? '全部项目' : '指定项目' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="remark" label="备注" min-width="140" show-overflow-tooltip />
+        <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="openDialog(row)">编辑</el-button>
             <el-button type="success" link size="small" @click="openPermDialog(row)">分配权限</el-button>
+            <el-button type="warning" link size="small" @click="openDataScopeDialog(row)">数据权限</el-button>
             <el-popconfirm title="确认删除此角色？" @confirm="handleDelete(row.id)">
               <template #reference>
                 <el-button type="danger" link size="small">删除</el-button>
@@ -90,6 +98,38 @@
         <el-button type="primary" :loading="savingPerm" @click="handleSavePerm">保存</el-button>
       </template>
     </el-dialog>
+
+    <!-- 数据权限弹窗 -->
+    <el-dialog v-model="dataScopeDialogVisible" :title="`数据权限 - ${currentRole?.roleName || ''}`" width="520px" destroy-on-close>
+      <el-form label-width="90px">
+        <el-form-item label="权限范围">
+          <el-radio-group v-model="dataScopeForm.dataScope">
+            <el-radio value="all">全部项目</el-radio>
+            <el-radio value="custom">指定项目</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="dataScopeForm.dataScope === 'custom'" label="选择项目">
+          <el-select
+            v-model="dataScopeForm.projectIds"
+            multiple
+            filterable
+            placeholder="请选择可访问的项目"
+            style="width:100%"
+          >
+            <el-option
+              v-for="p in projectList"
+              :key="p.id"
+              :value="p.id"
+              :label="`${p.projectCode} - ${p.name}`"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dataScopeDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="savingDataScope" @click="handleSaveDataScope">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -122,6 +162,12 @@ const permTree = ref<any[]>([])
 const checkedKeys = ref<number[]>([])
 const currentRole = ref<any>(null)
 const treeRef = ref()
+
+// 数据权限
+const dataScopeDialogVisible = ref(false)
+const savingDataScope = ref(false)
+const projectList = ref<any[]>([])
+const dataScopeForm = reactive({ dataScope: 'all' as string, projectIds: [] as number[] })
 
 onMounted(() => { loadRoles() })
 
@@ -202,6 +248,35 @@ async function handleSavePerm() {
     permDialogVisible.value = false
   } catch { /* handled */ }
   savingPerm.value = false
+}
+
+async function openDataScopeDialog(row: any) {
+  currentRole.value = row
+  dataScopeDialogVisible.value = true
+  try {
+    const [scopeRes, projRes]: any[] = await Promise.all([
+      api.get(`/roles/${row.id}/data-scope`),
+      api.get('/projects'),
+    ])
+    dataScopeForm.dataScope = scopeRes.data?.dataScope || 'all'
+    dataScopeForm.projectIds = scopeRes.data?.projectIds || []
+    projectList.value = projRes.data || []
+  } catch { /* handled */ }
+}
+
+async function handleSaveDataScope() {
+  if (!currentRole.value) return
+  savingDataScope.value = true
+  try {
+    await api.put(`/roles/${currentRole.value.id}/data-scope`, {
+      dataScope: dataScopeForm.dataScope,
+      projectIds: dataScopeForm.projectIds,
+    })
+    ElMessage.success('数据权限保存成功')
+    dataScopeDialogVisible.value = false
+    loadRoles()
+  } catch { /* handled */ }
+  savingDataScope.value = false
 }
 </script>
 

@@ -50,4 +50,24 @@ public class SysRoleController {
         roleService.assignPermissions(id, body.get("permissionIds"));
         return R.ok();
     }
+
+    @GetMapping("/{id}/data-scope")
+    public R<Map<String, Object>> getDataScope(@PathVariable Long id) {
+        SysRole role = roleService.getById(id);
+        List<Long> projectIds = roleService.getRoleProjectIds(id);
+        return R.ok(Map.of(
+                "dataScope", role.getDataScope() != null ? role.getDataScope() : "all",
+                "projectIds", projectIds
+        ));
+    }
+
+    @PutMapping("/{id}/data-scope")
+    @SuppressWarnings("unchecked")
+    public R<Void> assignDataScope(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        String dataScope = (String) body.get("dataScope");
+        List<Number> ids = (List<Number>) body.getOrDefault("projectIds", List.of());
+        List<Long> projectIds = ids.stream().map(Number::longValue).collect(java.util.stream.Collectors.toList());
+        roleService.assignDataScope(id, dataScope, projectIds);
+        return R.ok();
+    }
 }

@@ -10,4 +10,6 @@ public interface SysRoleService extends IService<SysRole> {
     void deleteRole(Long id);
     List<Long> getRolePermissionIds(Long roleId);
     void assignPermissions(Long roleId, List<Long> permissionIds);
+    List<Long> getRoleProjectIds(Long roleId);
+    void assignDataScope(Long roleId, String dataScope, List<Long> projectIds);
 }
