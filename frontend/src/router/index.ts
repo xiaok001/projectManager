@@ -60,7 +60,7 @@ const routes: RouteRecordRaw[] = [
         path: 'config',
         name: 'Config',
         component: () => import('../views/config/ConfigView.vue'),
-        meta: { title: '系统配置', icon: 'Setting' },
+        meta: { title: '系统配置', icon: 'Setting', roles: ['DEPT_MANAGER'] },
       },
       {
         path: 'users',
@@ -76,6 +76,17 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
+  // 404 页面（放在最后，匹配所有未命中的路由）
+  {
+    path: '/404',
+    name: 'NotFound',
+    component: () => import('../views/error/NotFoundView.vue'),
+    meta: { requiresAuth: false },
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/404',
+  },
 ]
 
 const router = createRouter({
@@ -86,13 +97,31 @@ const router = createRouter({
 // 路由守卫
 router.beforeEach((to, _from, next) => {
   const token = localStorage.getItem('token')
+  const userStr = localStorage.getItem('user')
+  const user = userStr ? JSON.parse(userStr) : null
+
+  // 未登录 → 跳登录页（登录页本身除外）
   if (to.meta.requiresAuth !== false && !token) {
     next('/login')
-  } else if (to.path === '/login' && token) {
-    next('/dashboard')
-  } else {
-    next()
+    return
   }
+
+  // 已登录访问登录页 → 跳首页
+  if (to.path === '/login' && token) {
+    next('/dashboard')
+    return
+  }
+
+  // 角色权限校验
+  if (to.meta.roles && user) {
+    const allowedRoles = to.meta.roles as string[]
+    if (!allowedRoles.includes(user.role)) {
+      next('/dashboard')
+      return
+    }
+  }
+
+  next()
 })
 
 export default router

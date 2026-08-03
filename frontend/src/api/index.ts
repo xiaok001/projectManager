@@ -41,7 +41,10 @@ api.interceptors.response.use(
         router.push('/login')
         ElMessage.error('登录已过期，请重新登录')
       } else if (status === 403) {
-        ElMessage.error('无权操作')
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        router.push('/login')
+        ElMessage.error('无权操作，请重新登录')
       } else {
         ElMessage.error(data?.message || '服务器错误')
       }
