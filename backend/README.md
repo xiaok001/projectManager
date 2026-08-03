@@ -12,46 +12,18 @@
 | Maven | 3.8+ |
 | MySQL | 8.0+ |
 
-### 安装依赖
-
 ```bash
-mvn clean install
-```
-
-### 开发模式运行
-
-```bash
-mvn spring-boot:run
-```
-
-启动后监听 http://localhost:8080。
-
-### 生产构建
-
-```bash
-mvn clean package -DskipTests
-```
-
-构建产物：`target/project-manager-1.0.0-SNAPSHOT.jar`
-
-### 生产环境运行
-
-```bash
-java -jar target/project-manager-1.0.0-SNAPSHOT.jar
-```
-
-或指定外部配置文件：
-
-```bash
+mvn clean install              # 安装依赖
+mvn spring-boot:run            # 开发运行 http://localhost:8080
+mvn clean package -DskipTests  # 生产构建 → target/project-manager-1.0.0-SNAPSHOT.jar
 java -jar app.jar --spring.config.location=classpath:/application.yml,./application.yml
 ```
 
 ## 配置说明
 
-所有配置在 `src/main/resources/application.yml`，以下为关键配置项：
+`src/main/resources/application.yml`，关键配置项：
 
 ### 数据库连接
-
 ```yaml
 spring:
   datasource:
@@ -60,15 +32,14 @@ spring:
     password: root
 ```
 
-### 邮件发送（163 邮箱 SMTP）
-
+### 邮件发送（163 SMTP）
 ```yaml
 spring:
   mail:
     host: smtp.163.com
     port: 465
     username: your-email@163.com
-    password: your-smtp-auth-code   # 163邮箱SMTP授权码，非登录密码
+    password: your-smtp-auth-code   # 163邮箱SMTP授权码
     properties:
       mail.smtp.auth: true
       mail.smtp.ssl.enable: true
@@ -77,13 +48,10 @@ spring:
       mail.smtp.socketFactory.port: 465
 ```
 
-> 授权码获取：163邮箱网页版 → 设置 → POP3/SMTP/IMAP → 开启SMTP服务 → 生成授权码
-
-### AI 服务（支持两种，可切换）
-
+### AI 服务（可切换）
 ```yaml
 ai:
-  provider: ollama          # 切换: deepseek 或 ollama
+  provider: ollama              # deepseek 或 ollama
   deepseek:
     api-key: your-api-key
     base-url: https://api.deepseek.com
@@ -93,155 +61,189 @@ ai:
     model: qwen2.5:7b
 ```
 
-- `ai.provider=deepseek`：调用 DeepSeek 云端 API（需 API Key）
-- `ai.provider=ollama`：调用本地 Ollama 服务（无需 Key，需部署 Ollama）
-
-### JWT 配置
-
+### JWT
 ```yaml
 jwt:
-  secret: your-jwt-secret-key-change-it   # 生产环境务必修改
-  expiration: 86400000                     # Token有效期，默认24小时(毫秒)
+  secret: your-jwt-secret-key-change-it
+  expiration: 86400000   # 24小时(毫秒)
 ```
 
-### CORS 跨域配置
-
-在 `SecurityConfig.java` 中配置允许的前端地址：
-
-```java
-configuration.setAllowedOrigins(List.of(
-    "http://localhost:5173",           // 本地开发
-    "http://192.168.4.161:8090"        // 生产环境
-));
-```
+### CORS
+`SecurityConfig.java` 中配置允许的前端地址。
 
 ## 项目结构
 
 ```
-backend/src/main/java/com/pm/
-├── ProjectManagerApplication.java       # 启动类
+src/main/java/com/pm/
+├── ProjectManagerApplication.java          # 启动类(@EnableAsync @EnableScheduling)
 ├── config/
-│   ├── SecurityConfig.java              # Spring Security + CORS 配置
-│   ├── MybatisPlusConfig.java           # 分页插件 + 自动填充
-│   ├── AppConfig.java                   # RestTemplate / ObjectMapper
-│   └── OperationLogAspect.java          # AOP操作日志切面(记录增删改)
-├── controller/                          # REST API 控制器
-│   ├── AuthController.java              # 登录 / 用户列表
-│   ├── ProjectController.java           # 项目CRUD
-│   ├── ProjectStageController.java      # 阶段管理
-│   ├── ProjectRiskController.java       # 风险管理
-│   ├── DashboardController.java         # 首页聚合数据
-│   ├── SystemConfigController.java      # 全局配置
-│   ├── AiSuggestionController.java      # AI风险建议
-│   ├── EmailDigestController.java       # 邮件摘要/测试发送
-│   ├── ProjectChangeLogController.java  # 变更记录
-│   ├── UserController.java              # 用户管理CRUD
-│   └── OperationLogController.java      # 操作日志查询
+│   ├── SecurityConfig.java                 # Spring Security + CORS
+│   ├── MybatisPlusConfig.java              # 分页插件 + 自动填充
+│   ├── AppConfig.java                      # RestTemplate / ObjectMapper
+│   └── OperationLogAspect.java             # AOP操作日志(POST/PUT/DELETE)
+├── controller/                             # 13个REST控制器
+│   ├── AuthController.java                 # 登录 + 忘记密码
+│   ├── ProjectController.java              # 项目CRUD + 查询过滤
+│   ├── ProjectStageController.java         # 阶段管理
+│   ├── ProjectRiskController.java          # 风险管理
+│   ├── ProjectTodoController.java          # 待办(全局+项目级)
+│   ├── DashboardController.java            # 首页聚合 + 健康度
+│   ├── AiSuggestionController.java         # AI建议 + 手动扫描
+│   ├── ReportController.java               # AI周报
+│   ├── UserController.java                 # 用户CRUD
+│   ├── SysRoleController.java              # 角色 + 权限 + 数据权限
+│   ├── SysPermissionController.java        # 权限树
+│   ├── SystemConfigController.java         # 全局配置
+│   ├── EmailDigestController.java          # 邮件摘要 + 测试发送
+│   ├── ProjectChangeLogController.java     # 变更记录
+│   └── OperationLogController.java         # 操作日志查询
 ├── service/
-│   ├── ProjectService.java              # 项目业务接口
-│   ├── ProjectStageService.java         # 阶段业务接口
-│   ├── ProjectRiskService.java          # 风险业务接口
-│   ├── DashboardService.java            # Dashboard聚合+健康评分计算
-│   ├── SystemConfigService.java         # 配置管理
-│   ├── AiRiskSuggestionService.java     # AI风险建议
-│   ├── EmailDigestService.java          # 邮件摘要+定时发送
-│   ├── ProjectChangeLogService.java     # 变更记录
-│   ├── SysUserService.java              # 用户管理
-│   ├── OperationLogService.java         # 操作日志
-│   └── impl/                            # 实现类
-│       ├── AiProvider.java              # AI服务抽象接口
-│       ├── DeepSeekProvider.java        # DeepSeek实现
-│       ├── OllamaProvider.java          # Ollama实现
-│       └── ...ServiceImpl.java          # 各业务实现
-├── mapper/                              # MyBatis-Plus Mapper接口
+│   ├── ProjectService.java                 # 项目(含数据权限过滤+查询条件)
+│   ├── ProjectStageService.java            # 阶段(延期判定+进度联动状态)
+│   ├── ProjectRiskService.java             # 风险(编号生成+停滞判定)
+│   ├── ProjectTodoService.java             # 待办(分页+逾期转风险)
+│   ├── DashboardService.java               # Dashboard + 健康评分计算
+│   ├── AiRiskSuggestionService.java        # AI建议 + 全量扫描
+│   ├── ReportService.java                  # 周报数据聚合
+│   ├── SysUserService.java                 # 用户(含忘记密码)
+│   ├── SysRoleService.java                 # 角色 + 权限 + 数据权限
+│   ├── SysPermissionService.java           # 权限树
+│   ├── SystemConfigService.java            # 配置管理
+│   ├── EmailDigestService.java             # 邮件摘要 + 定时发送
+│   ├── ProjectChangeLogService.java        # 变更记录
+│   ├── OperationLogService.java            # 操作日志
+│   └── impl/
+│       ├── AiProvider.java                 # AI抽象接口
+│       ├── DeepSeekProvider.java           # DeepSeek实现
+│       ├── OllamaProvider.java             # Ollama实现
+│       └── *ServiceImpl.java               # 各业务实现
+├── mapper/                                 # MyBatis-Plus Mapper (12个)
 ├── model/
-│   ├── entity/                          # 数据库实体(9个)
-│   ├── dto/                             # 请求DTO(7个)
-│   ├── vo/                              # 响应VO(5个)
-│   └── enums/                           # 枚举(ProjectLevel/Severity)
+│   ├── entity/                             # 数据库实体 (14个)
+│   ├── dto/                                # 请求DTO (8个)
+│   ├── vo/                                 # 响应VO (7个)
+│   └── enums/                              # 枚举(ProjectLevel/Severity)
 ├── common/
-│   ├── response/R.java                  # 统一响应 {code, message, data}
-│   ├── exception/BusinessException.java # 业务异常
-│   ├── exception/GlobalExceptionHandler.java  # 全局异常处理
-│   └── constants/Constants.java         # 常量定义
+│   ├── response/R.java                     # 统一响应 {code, message, data}
+│   ├── exception/BusinessException.java    # 业务异常
+│   ├── exception/GlobalExceptionHandler.java  # 全局异常(含字段名去前缀)
+│   └── constants/Constants.java            # 常量(阶段名/角色/状态)
 ├── security/
-│   ├── JwtUtil.java                     # JWT工具类(生成/解析/验证)
-│   └── JwtAuthenticationFilter.java     # JWT认证过滤器
+│   ├── JwtUtil.java                        # JWT生成/解析/验证
+│   └── JwtAuthenticationFilter.java        # JWT认证过滤器
 └── schedule/
-    └── ScheduledTasks.java              # 定时任务(阶段延期刷新/风险停滞刷新)
+    └── ScheduledTasks.java                 # 4个定时任务
 ```
 
-## 数据库表
+## 数据库表（12张 + 初始数据）
 
 | 表名 | 说明 |
 |---|---|
-| `sys_user` | 用户表 (自建账号体系，BCrypt密码加密) |
-| `project` | 项目主表 |
-| `project_stage` | 项目阶段表 (含人天/成本/进度字段) |
-| `project_risk` | 风险/问题表 (风险编号自动生成) |
-| `system_config` | 全局配置表 (18项可配参数) |
-| `ai_risk_suggestion` | AI风险建议表 |
-| `email_digest_log` | 邮件发送记录表 |
-| `project_change_log` | 项目变更记录表 (含变更前后对比) |
-| `operation_log` | 操作日志表 (AOP自动记录) |
+| sys_user | 用户表（BCrypt密码） |
+| sys_role | 角色表（含data_scope数据权限） |
+| sys_permission | 权限表（菜单+按钮，树形结构） |
+| sys_role_permission | 角色权限关联 |
+| sys_role_project | 角色数据权限关联（项目级） |
+| project | 项目主表（含expected_end_date） |
+| project_stage | 阶段表（含人天/成本/进度） |
+| project_risk | 风险表（编号自动生成） |
+| project_todo | 待办表（编号自动生成，逾期自动转风险） |
+| project_change_log | 变更记录（含change_field对比字段） |
+| ai_risk_suggestion | AI风险建议 |
+| system_config | 全局配置（18项） |
+| email_digest_log | 邮件发送记录 |
+| operation_log | 操作日志 |
 
-建表脚本：`sql/schema.sql`，默认管理员：`admin` / `admin123`
+建表脚本：`sql/schema.sql`
 
 ## API 接口
 
-统一前缀：`/api/v1`，返回格式：`{"code": 200, "message": "success", "data": ...}`
+统一前缀：`/api/v1`，返回：`{code, message, data}`
 
-认证方式：请求头 `Authorization: Bearer <token>`（登录接口除外）
+认证：`Authorization: Bearer <token>`（登录/忘记密码接口除外）
 
-| 方法 | 路径 | 说明 | 权限 |
-|---|---|---|---|
-| POST | /auth/login | 登录 | 公开 |
-| GET | /auth/users | 用户列表 | 已认证 |
-| GET/POST | /projects | 项目列表/创建 | 已认证 |
-| GET/PUT | /projects/{id} | 项目详情/编辑 | 部门经理/本人PM |
-| PUT | /projects/{id}/satisfaction | 更新满意度 | 部门经理/本人PM |
-| GET | /projects/{id}/stages | 阶段列表 | 已认证 |
-| PUT | /stages/{id} | 更新阶段 | 已认证 |
-| POST/GET | /projects/{id}/risks | 风险登记/列表 | 已认证 |
-| GET | /risks/aggregated | 跨项目风险聚合 | 已认证 |
-| PUT | /risks/{id}/stale-override | 手动覆盖停滞 | 已认证 |
-| GET | /dashboard/summary | Dashboard聚合 | 已认证 |
-| GET | /dashboard/health | 健康度列表 | 已认证 |
-| GET/PUT | /config | 全局配置 | 部门经理 |
-| GET | /ai-suggestions | AI建议列表 | 已认证 |
-| POST | /ai-suggestions/{id}/accept | 采纳建议 | 已认证 |
-| POST | /ai-suggestions/{id}/ignore | 忽略建议 | 已认证 |
-| POST/GET | /projects/{id}/changes | 变更记录 | 已认证 |
-| POST | /digest/send-now | 手动发送摘要 | 部门经理 |
-| POST | /digest/test?email=xxx | 测试邮件发送 | 部门经理 |
-| GET | /digest/logs | 邮件发送记录 | 部门经理 |
-| GET/POST/PUT/DELETE | /users | 用户管理 | 部门经理 |
-| GET | /operation-logs | 操作日志 | 部门经理 |
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| POST | /auth/login | 登录 |
+| POST | /auth/verify-username | 验证账号 |
+| POST | /auth/reset-password | 重置密码(发邮件) |
+| GET/POST/PUT/DELETE | /users | 用户管理 |
+| GET/POST/PUT/DELETE | /roles | 角色管理 |
+| GET | /roles/{id}/permissions | 获取角色权限 |
+| PUT | /roles/{id}/permissions | 分配权限 |
+| GET | /roles/{id}/data-scope | 获取数据权限 |
+| PUT | /roles/{id}/data-scope | 分配数据权限 |
+| GET | /permissions/tree | 权限树 |
+| GET/POST | /projects | 项目列表(含name/projectCode/level查询) |
+| GET/PUT/DELETE | /projects/{id} | 项目详情/编辑/删除 |
+| PUT | /projects/{id}/satisfaction | 更新满意度 |
+| GET | /projects/{id}/stages | 阶段列表 |
+| PUT | /stages/{id} | 更新阶段(进度联动状态) |
+| POST/GET | /projects/{id}/risks | 风险登记/列表 |
+| GET | /risks/aggregated | 跨项目风险聚合 |
+| PUT | /risks/{id}/stale-override | 手动覆盖停滞 |
+| GET/POST | /projects/{id}/todos | 项目待办列表/创建 |
+| GET | /todos/page | 全局待办分页(含项目/状态/优先级/关键词) |
+| POST | /todos | 全局创建待办 |
+| PUT/DELETE | /todos/{id} | 编辑/删除待办 |
+| GET | /ai-suggestions/page | AI建议分页(含项目/状态/时间范围) |
+| GET | /ai-suggestions | AI建议列表 |
+| POST | /ai-suggestions/{id}/accept | 采纳建议 |
+| POST | /ai-suggestions/{id}/ignore | 忽略建议 |
+| POST | /ai-suggestions/scan | 手动AI扫描 |
+| GET | /dashboard/summary | Dashboard聚合 |
+| GET | /dashboard/health | 项目健康度 |
+| GET/PUT | /config | 全局配置 |
+| POST | /digest/send-now | 手动发送摘要 |
+| POST | /digest/test | 测试邮件发送 |
+| GET | /digest/logs | 邮件发送记录 |
+| POST/GET | /projects/{id}/changes | 变更记录 |
+| GET | /reports/weekly | AI周报(支持projectId参数) |
+| GET | /operation-logs | 操作日志分页 |
 
 ## 核心业务逻辑
 
-### 项目健康评分
-
+### 健康评分
 ```
 总分 = 时间得分 × 35% + 风险得分 × 40% + 交付得分 × 25%
 ```
+- 时间：100 - 延期天数 × 2（每天扣2分）
+- 风险：100 - 高×15 - 中×8 - 低×3 - 停滞×10
+- 交付：按时完成阶段数 ÷ 应完成阶段数 × 100
+- 颜色：≥80 绿 / 60-79 黄 / <60 红
 
-- 时间得分：100 - 延期天数 × 2（每天扣2分）
-- 风险得分：100 - 高危×15 - 中危×8 - 低危×3 - 停滞×10
-- 交付得分：按时完成阶段数 ÷ 应完成阶段数 × 100
-- 颜色映射：≥80 绿 / 60-79 黄 / <60 红
-- 所有权重和阈值均可通过系统配置页面调整
+### 风险编号
+`{项目编号}-{日期}-{序号}`，如 `PRJ-A01-20260803-02`
 
-### 风险编号生成规则
+### 待办编号
+`{项目编号}-TD-{日期}-{序号}`，如 `PRJ-A01-TD-20260803-01`
 
-格式：`{项目编号}-{日期}-{序号}`，如 `PRJ-A01-20260731-02`
+### 进度与状态联动
+| 进度 | 状态 | 额外动作 |
+|---|---|---|
+| 0% | 未开始 | — |
+| 1%-99% | 进行中 | 自动填写实际开始日期 |
+| 100% | 已完成 | 自动填写实际结束日期 |
 
-### AI 风险探测
+### 项目结束校验
+- 编辑项目状态改为「已完成」时，检查非运维阶段是否全部完成
+- 未完成时后端拒绝保存，前端显示未完成阶段列表+二次确认
 
-1. 项目经理更新阶段备注 → 异步调用 AI 分析文本
-2. AI 识别潜在风险 → 写入 `ai_risk_suggestion` 表（状态：待确认）
-3. 用户可选择「采纳」（自动创建正式风险）或「忽略」
+### AI风险探测
+1. 阶段备注保存 → 异步调用AI分析 → 写入建议表（待确认）
+2. 全量扫描：遍历所有进行中项目阶段备注，按`(stageId+remark哈希)`去重
+3. 每晚22:00自动执行，前端可手动触发
+
+### 周报生成
+- 聚合本周完成阶段/新增关闭风险/待办统计
+- 排除运维阶段和已结束项目
+- AI生成3-5句叙述性总结
 
 ### 操作日志
+- AOP切面拦截所有Controller方法，仅记录POST/PUT/DELETE
+- 按URL路径自动识别操作模块
+- 支持按模块和操作类型过滤
 
-AOP 切面自动拦截所有 Controller 方法，仅记录 POST/PUT/DELETE（GET 查询不记录），按 URL 路径自动识别操作模块。
+### 数据权限
+- 角色可配置「全部项目」或「指定项目」
+- 项目查询时自动按角色数据权限过滤
