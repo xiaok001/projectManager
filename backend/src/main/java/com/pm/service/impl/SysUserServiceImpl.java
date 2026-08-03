@@ -128,10 +128,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
-
-        // Logical delete by setting status to 0
-        user.setStatus(0);
-        updateById(user);
-        log.info("删除用户成功: userId={}", id);
+        // 不能删除自己
+        if ("admin".equals(user.getUsername())) {
+            throw new BusinessException("不能删除超级管理员账号");
+        }
+        removeById(id);
+        log.info("删除用户成功: userId={}, username={}", id, user.getUsername());
     }
 }

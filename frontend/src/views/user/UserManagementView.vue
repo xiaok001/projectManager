@@ -35,12 +35,15 @@
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="openDialog(row)">编辑</el-button>
             <el-popconfirm
-              v-if="row.id !== currentUserId"
-              title="确认禁用此用户？"
+              v-if="row.username !== 'admin' && row.id !== currentUserId"
+              :title="`确认删除用户「${row.realName}」？删除后该用户将无法登录系统，此操作不可恢复。`"
+              confirm-button-text="确认删除"
+              confirm-button-type="danger"
+              width="320"
               @confirm="handleDelete(row.id)"
             >
               <template #reference>
-                <el-button type="danger" link size="small">禁用</el-button>
+                <el-button type="danger" link size="small">删除</el-button>
               </template>
             </el-popconfirm>
           </template>
@@ -208,7 +211,7 @@ async function handleSubmit() {
 async function handleDelete(id: number) {
   try {
     await api.delete(`/users/${id}`)
-    ElMessage.success('用户已禁用')
+    ElMessage.success('用户已删除')
     loadUsers()
   } catch (e) { /* ignore */ }
 }
