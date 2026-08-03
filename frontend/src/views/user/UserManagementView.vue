@@ -132,6 +132,12 @@ const rules: FormRules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   realName: [{ required: true, message: '请输入真实姓名', trigger: 'blur' }],
   roleId: [{ required: true, message: '请选择角色', trigger: 'change' }],
+  email: [
+    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' },
+  ],
+  phone: [
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号格式', trigger: 'blur' },
+  ],
 }
 
 function getRoleName(roleId: number | null) {
