@@ -18,7 +18,7 @@ public class UserDTO {
     @Email(message = "请输入正确的邮箱格式")
     private String email;
 
-    @Pattern(regexp = "^1[3-9]\\d{9}$", message = "请输入正确的手机号格式")
+    @Pattern(regexp = "^$|^1[3-9]\\d{9}$", message = "请输入正确的手机号格式")
     private String phone;
 
     private String role;
