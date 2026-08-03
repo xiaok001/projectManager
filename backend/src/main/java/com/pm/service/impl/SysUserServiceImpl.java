@@ -5,9 +5,11 @@ import com.pm.common.exception.BusinessException;
 import com.pm.mapper.SysUserMapper;
 import com.pm.model.dto.LoginDTO;
 import com.pm.model.dto.UserDTO;
+import com.pm.model.entity.SysRole;
 import com.pm.model.entity.SysUser;
 import com.pm.model.vo.LoginVO;
 import com.pm.security.JwtUtil;
+import com.pm.service.SysRoleService;
 import com.pm.service.SysUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private final SysRoleService roleService;
 
     @Override
     public LoginVO login(LoginDTO dto) {
@@ -57,9 +60,25 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     public List<SysUser> listAllUsers() {
-        return lambdaQuery()
-                .eq(SysUser::getStatus, 1)
-                .list();
+        List<SysUser> users = lambdaQuery().list();
+        // 自动补全 roleId：旧数据可能没有 roleId，通过 role 字段匹配
+        for (SysUser user : users) {
+            if (user.getRoleId() == null && user.getRole() != null) {
+                SysRole matchedRole = roleService.lambdaQuery()
+                        .eq(SysRole::getRoleKey, user.getRole().toLowerCase())
+                        .or()
+                        .eq(SysRole::getRoleKey, user.getRole())
+                        .one();
+                if (matchedRole != null) {
+                    user.setRoleId(matchedRole.getId());
+                    // 回写数据库
+                    lambdaUpdate().eq(SysUser::getId, user.getId())
+                            .set(SysUser::getRoleId, matchedRole.getId())
+                            .update();
+                }
+            }
+        }
+        return users;
     }
 
     @Override

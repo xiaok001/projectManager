@@ -161,6 +161,12 @@ async function loadUsers() {
 function openDialog(row: any | null) {
   if (row) {
     editingId.value = row.id
+    // 兜底：roleId 为空时按 role 字段匹配
+    let roleId = row.roleId
+    if (!roleId && row.role) {
+      const matched = roleList.value.find((r: any) => r.roleKey === row.role.toLowerCase() || r.roleKey === row.role)
+      if (matched) roleId = matched.id
+    }
     form.value = {
       username: row.username,
       password: '',
@@ -168,7 +174,7 @@ function openDialog(row: any | null) {
       email: row.email || '',
       phone: row.phone || '',
       role: row.role,
-      roleId: row.roleId || null,
+      roleId: roleId || null,
       status: row.status,
     }
   } else {
