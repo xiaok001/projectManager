@@ -50,7 +50,7 @@
     <el-card shadow="never" style="margin-top:12px">
       <el-table v-loading="loading" :data="pagedList" border stripe style="width:100%">
         <el-table-column prop="projectCode" label="项目编号" width="140" />
-        <el-table-column prop="name" label="项目名称" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="name" label="项目名称" min-width="180" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
         <el-table-column prop="type" label="类型" width="100" />
         <el-table-column label="等级" width="80" align="center">
           <template #default="{ row }">

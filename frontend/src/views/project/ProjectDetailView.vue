@@ -77,7 +77,7 @@
                 <el-tag size="small" :type="stageStatusType(row.status)">{{ row.status }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="remark" label="备注" min-width="140" show-overflow-tooltip />
+            <el-table-column prop="remark" label="备注" min-width="140" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
             <el-table-column label="操作" width="70" align="center" fixed="right">
               <template #default="{ row }">
                 <el-button type="primary" link @click="openStageDialog(row)">编辑</el-button>
@@ -93,7 +93,7 @@
           </div>
           <el-table :data="risks" border stripe style="width:100%">
             <el-table-column prop="riskCode" label="风险编号" width="160" />
-            <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
+            <el-table-column prop="description" label="描述" min-width="200" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
             <el-table-column prop="type" label="类型" width="100">
               <template #default="{ row }">
                 <el-tag size="small">{{ row.type }}</el-tag>
@@ -110,7 +110,7 @@
               </template>
             </el-table-column>
             <el-table-column prop="ownerName" label="责任人" width="90" />
-            <el-table-column prop="actionPlan" label="处理措施" min-width="160" show-overflow-tooltip />
+            <el-table-column prop="actionPlan" label="处理措施" min-width="160" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
             <el-table-column prop="isStale" label="停滞" width="70" align="center">
               <template #default="{ row }">
                 <el-tag :type="row.isStale ? 'danger' : 'success'" size="small">{{ row.isStale ? '是' : '否' }}</el-tag>
@@ -130,10 +130,10 @@
             <el-button type="primary" @click="openTodoDialog(null)">新增待办</el-button>
           </div>
           <el-table :data="todos" border stripe style="width:100%">
-            <el-table-column prop="todoCode" label="待办编号" width="180" show-overflow-tooltip />
-            <el-table-column prop="title" label="待办事项" min-width="200" show-overflow-tooltip />
+            <el-table-column prop="todoCode" label="待办编号" width="180" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
+            <el-table-column prop="title" label="待办事项" min-width="200" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
             <el-table-column prop="stageName" label="所属阶段" width="100" />
-            <el-table-column prop="source" label="来源" width="100" show-overflow-tooltip />
+            <el-table-column prop="source" label="来源" width="100" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
             <el-table-column prop="priority" label="优先级" width="80" align="center">
               <template #default="{ row }">
                 <el-tag :type="row.priority==='高'?'danger':row.priority==='中'?'warning':'info'" size="small">{{ row.priority }}</el-tag>
@@ -156,7 +156,7 @@
                 <el-tag :type="todoStatusType(row.status)" size="small">{{ row.status }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="remark" label="备注" min-width="140" show-overflow-tooltip />
+            <el-table-column prop="remark" label="备注" min-width="140" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
             <el-table-column label="操作" width="120" align="center" fixed="right">
               <template #default="{ row }">
                 <el-button type="primary" link @click="openTodoDialog(row)">编辑</el-button>

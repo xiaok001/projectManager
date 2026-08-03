@@ -47,9 +47,9 @@
           <template #default="{ $index }">{{ (pageNum - 1) * pageSize + $index + 1 }}</template>
         </el-table-column>
         <el-table-column prop="projectCode" label="项目编号" width="140" />
-        <el-table-column prop="projectName" label="项目名称" width="160" show-overflow-tooltip />
-        <el-table-column prop="sourceText" label="原始备注" min-width="220" show-overflow-tooltip />
-        <el-table-column prop="suggestedRiskDesc" label="AI建议风险描述" min-width="260" show-overflow-tooltip />
+        <el-table-column prop="projectName" label="项目名称" width="160" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
+        <el-table-column prop="sourceText" label="原始备注" min-width="220" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
+        <el-table-column prop="suggestedRiskDesc" label="AI建议风险描述" min-width="260" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
         <el-table-column prop="status" label="状态" width="90" align="center">
           <template #default="{ row }">
             <el-tag :type="statusTagType(row.status)" size="small">{{ row.status }}</el-tag>

@@ -14,7 +14,7 @@
         <el-table-column prop="id" label="ID" width="60" />
         <el-table-column prop="username" label="用户名" width="120" />
         <el-table-column prop="realName" label="真实姓名" width="120" />
-        <el-table-column prop="email" label="邮箱" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="email" label="邮箱" min-width="180" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
         <el-table-column prop="phone" label="手机号" width="130" />
         <el-table-column prop="role" label="角色" width="120">
           <template #default="{ row }">

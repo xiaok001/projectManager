@@ -41,7 +41,7 @@
             >{{ row.operation }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="description" label="操作描述" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="description" label="操作描述" min-width="200" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
         <el-table-column prop="operatorName" label="操作人" width="90" />
         <el-table-column prop="requestMethod" label="方法" width="70">
           <template #default="{ row }">
@@ -52,7 +52,7 @@
             >{{ row.requestMethod }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="requestUrl" label="请求路径" min-width="220" show-overflow-tooltip />
+        <el-table-column prop="requestUrl" label="请求路径" min-width="220" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
         <el-table-column prop="ip" label="IP" width="130" />
         <el-table-column prop="executionTime" label="耗时" width="80">
           <template #default="{ row }">

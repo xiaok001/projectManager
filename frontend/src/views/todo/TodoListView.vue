@@ -43,9 +43,9 @@
         <el-table-column type="index" label="序号" width="55" align="center">
           <template #default="{ $index }">{{ (pageNum - 1) * pageSize + $index + 1 }}</template>
         </el-table-column>
-        <el-table-column prop="todoCode" label="待办编号" width="180" show-overflow-tooltip />
+        <el-table-column prop="todoCode" label="待办编号" width="180" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
         <el-table-column prop="projectCode" label="项目编号" width="130" />
-        <el-table-column prop="title" label="待办事项" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="title" label="待办事项" min-width="200" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
         <el-table-column prop="stageName" label="所属阶段" width="100" />
         <el-table-column prop="priority" label="优先级" width="75" align="center">
           <template #default="{ row }">

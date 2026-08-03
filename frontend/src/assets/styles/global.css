@@ -67,24 +67,37 @@ body {
   margin-top: 4px;
 }
 
-/* ========== 表格溢出文字浮窗样式 ========== */
-/* 覆盖 Element Plus el-tooltip 的默认样式 */
-.el-tooltip__popper.is-dark {
-  max-width: 400px !important;
-  word-wrap: break-word !important;
-  word-break: break-all !important;
-  white-space: normal !important;
+/* ========== 表格溢出 Tooltip (popper-class: pm-tooltip) ========== */
+/* 所有 el-table-column 的 show-overflow-tooltip 统一使用此样式 */
+.pm-tooltip {
+  /* 固定尺寸：不随内容撑开 */
+  width: 420px !important;
+  max-width: 420px !important;
+  max-height: 280px !important;
+  box-sizing: border-box !important;
+  /* 超出滚动 */
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  /* 文本换行：中文连续换行、长英文/URL断行、保留原有换行 */
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+  /* 排版 */
   line-height: 1.6 !important;
-  padding: 10px 14px !important;
+  padding: 12px !important;
   font-size: 13px !important;
+  /* 现代 SaaS 圆角 */
+  border-radius: 8px !important;
+  /* 滚动条美化 */
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(255,255,255,0.25) transparent !important;
 }
-
-.el-tooltip__popper.is-light {
-  max-width: 400px !important;
-  word-wrap: break-word !important;
-  word-break: break-all !important;
-  white-space: normal !important;
-  line-height: 1.6 !important;
-  padding: 10px 14px !important;
-  font-size: 13px !important;
+.pm-tooltip::-webkit-scrollbar { width: 5px !important; }
+.pm-tooltip::-webkit-scrollbar-track { background: transparent !important; }
+.pm-tooltip::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2) !important;
+  border-radius: 3px !important;
+}
+.pm-tooltip::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.35) !important;
 }

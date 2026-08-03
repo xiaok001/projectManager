@@ -22,7 +22,7 @@
             </template>
           </el-table-column>
           <el-table-column prop="riskCode" label="风险编号" width="160" />
-          <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
+          <el-table-column prop="description" label="描述" min-width="200" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
           <el-table-column prop="riskType" label="类型" width="80">
             <template #default="{ row }">
               <el-tag size="small" :type="row.riskType === '风险' ? 'warning' : 'danger'">{{ row.riskType }}</el-tag>

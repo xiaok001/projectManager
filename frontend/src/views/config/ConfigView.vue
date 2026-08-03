@@ -86,13 +86,13 @@
       </template>
       <el-table :data="logs" v-loading="logsLoading" stripe>
         <el-table-column prop="sendDate" label="日期" width="120" />
-        <el-table-column prop="recipients" label="收件人" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="recipients" label="收件人" min-width="200" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
         <el-table-column prop="sendStatus" label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.sendStatus === '成功' ? 'success' : 'danger'">{{ row.sendStatus }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="failReason" label="失败原因" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="failReason" label="失败原因" min-width="150" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
         <el-table-column prop="sentAt" label="发送时间" width="180" />
       </el-table>
     </el-card>

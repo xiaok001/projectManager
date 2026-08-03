@@ -81,7 +81,7 @@
           <el-table v-if="report.newRisks?.length" :data="report.newRisks" border size="small">
             <el-table-column prop="projectName" label="项目" width="140" />
             <el-table-column prop="riskCode" label="风险编号" width="160" />
-            <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
+            <el-table-column prop="description" label="描述" min-width="200" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
             <el-table-column prop="severity" label="严重程度" width="90">
               <template #default="{ row }">
                 <el-tag :type="row.severity==='高'?'danger':row.severity==='中'?'warning':'info'" size="small">{{ row.severity }}</el-tag>
