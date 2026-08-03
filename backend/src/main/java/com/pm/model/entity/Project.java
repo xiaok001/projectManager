@@ -27,6 +27,8 @@ public class Project {
     private Long pmId;
     /** 立项日期 */
     private LocalDate startDate;
+    /** 预期结束日期 */
+    private LocalDate expectedEndDate;
     /** 当前阶段 */
     private String currentStage;
     /** 项目状态: 进行中/已完成/已暂停 */
@@ -41,4 +43,7 @@ public class Project {
     /** 非数据库字段: 项目经理姓名 */
     @TableField(exist = false)
     private String pmName;
+    /** 非数据库字段: 运维阶段开始日期(作为项目结束日期展示) */
+    @TableField(exist = false)
+    private LocalDate opsStartDate;
 }

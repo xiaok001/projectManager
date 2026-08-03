@@ -57,6 +57,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'AI风险建议', icon: 'Cpu' },
       },
       {
+        path: 'todos',
+        name: 'TodoList',
+        component: () => import('../views/todo/TodoListView.vue'),
+        meta: { title: '项目待办', icon: 'Finished' },
+      },
+      {
         path: 'reports',
         name: 'Reports',
         component: () => import('../views/report/ReportView.vue'),

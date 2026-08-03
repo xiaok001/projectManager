@@ -66,3 +66,25 @@ body {
   color: #909399;
   margin-top: 4px;
 }
+
+/* ========== 表格溢出文字浮窗样式 ========== */
+/* 覆盖 Element Plus el-tooltip 的默认样式 */
+.el-tooltip__popper.is-dark {
+  max-width: 400px !important;
+  word-wrap: break-word !important;
+  word-break: break-all !important;
+  white-space: normal !important;
+  line-height: 1.6 !important;
+  padding: 10px 14px !important;
+  font-size: 13px !important;
+}
+
+.el-tooltip__popper.is-light {
+  max-width: 400px !important;
+  word-wrap: break-word !important;
+  word-break: break-all !important;
+  white-space: normal !important;
+  line-height: 1.6 !important;
+  padding: 10px 14px !important;
+  font-size: 13px !important;
+}

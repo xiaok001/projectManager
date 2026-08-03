@@ -26,6 +26,10 @@
           <el-icon><Cpu /></el-icon>
           <template #title>AI风险建议</template>
         </el-menu-item>
+        <el-menu-item index="/todos">
+          <el-icon><Finished /></el-icon>
+          <template #title>项目待办</template>
+        </el-menu-item>
         <el-menu-item index="/reports">
           <el-icon><Document /></el-icon>
           <template #title>报告</template>

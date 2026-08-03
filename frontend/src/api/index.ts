@@ -64,7 +64,8 @@ export const authApi = {
 
 // ============ 项目接口 ============
 export const projectApi = {
-  list: () => api.get('/projects'),
+  list: (params?: { name?: string; projectCode?: string; level?: number }) =>
+    api.get('/projects', { params }),
   detail: (id: number) => api.get(`/projects/${id}`),
   create: (data: any) => api.post('/projects', data),
   update: (id: number, data: any) => api.put(`/projects/${id}`, data),
@@ -87,6 +88,17 @@ export const riskApi = {
   update: (id: number, data: any) => api.put(`/risks/${id}`, data),
   staleOverride: (id: number, staleOverride: boolean) =>
     api.put(`/risks/${id}/stale-override`, { staleOverride }),
+}
+
+// ============ 待办事项接口 ============
+export const todoApi = {
+  listByProject: (projectId: number) => api.get(`/projects/${projectId}/todos`),
+  page: (params: { pageNum?: number; pageSize?: number; projectId?: number; status?: string; priority?: string; keyword?: string }) =>
+    api.get('/todos/page', { params }),
+  create: (projectId: number, data: any) => api.post(`/projects/${projectId}/todos`, data),
+  createGlobal: (data: any) => api.post('/todos', data),
+  update: (id: number, data: any) => api.put(`/todos/${id}`, data),
+  delete: (id: number) => api.delete(`/todos/${id}`),
 }
 
 // ============ Dashboard接口 ============
@@ -121,6 +133,8 @@ export const changeLogApi = {
 export const aiSuggestionApi = {
   list: (status?: string) =>
     api.get('/ai-suggestions', { params: status ? { status } : {} }),
+  page: (params: { pageNum?: number; pageSize?: number; status?: string; projectCode?: string; projectName?: string }) =>
+    api.get('/ai-suggestions/page', { params }),
   accept: (id: number) => api.post(`/ai-suggestions/${id}/accept`),
   ignore: (id: number) => api.post(`/ai-suggestions/${id}/ignore`),
 }
@@ -158,6 +172,12 @@ export const permissionApi = {
 export const operationLogApi = {
   list: (params: { pageNum?: number; pageSize?: number; module?: string; operation?: string }) =>
     api.get('/operation-logs', { params }),
+}
+
+// ============ 报告接口 ============
+export const reportApi = {
+  weekly: (projectId?: number) =>
+    api.get('/reports/weekly', { params: projectId ? { projectId } : {} }),
 }
 
 export default api

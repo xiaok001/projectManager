@@ -29,4 +29,8 @@ public class ProjectDTO {
 
     @NotNull(message = "立项日期不能为空")
     private LocalDate startDate;
+
+    private LocalDate expectedEndDate;
+
+    private String status;
 }

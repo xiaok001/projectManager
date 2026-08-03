@@ -15,7 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -52,6 +55,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         project.setAmount(dto.getAmount());
         project.setPmId(dto.getPmId());
         project.setStartDate(dto.getStartDate());
+        project.setExpectedEndDate(dto.getExpectedEndDate());
         project.setStatus(Constants.STATUS_ACTIVE);
         save(project);
 
@@ -81,6 +85,23 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         project.setAmount(dto.getAmount());
         project.setPmId(dto.getPmId());
         project.setStartDate(dto.getStartDate());
+        project.setExpectedEndDate(dto.getExpectedEndDate());
+
+        // 状态变更校验：如果要改为"已完成"，检查是否有未完成的阶段
+        if (dto.getStatus() != null && "已完成".equals(dto.getStatus())
+                && !"已完成".equals(project.getStatus())) {
+            List<ProjectStage> stages = projectStageService.listByProjectId(id);
+            boolean hasIncomplete = stages.stream()
+                    .filter(s -> !"运维".equals(s.getStageName()))
+                    .anyMatch(s -> !"已完成".equals(s.getStatus()));
+            if (hasIncomplete) {
+                throw new BusinessException("该项目存在未完成的阶段（运维阶段除外），请先完成所有阶段或在阶段备注中说明原因后再结束项目");
+            }
+        }
+        if (dto.getStatus() != null) {
+            project.setStatus(dto.getStatus());
+        }
+
         updateById(project);
 
         log.info("Project updated: id={}, operatorId={}", id, operatorId);
@@ -89,34 +110,46 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
 
     @Override
     public List<Project> listProjects(Long userId, String role) {
+        return listProjects(userId, role, null, null, null);
+    }
+
+    @Override
+    public List<Project> listProjects(Long userId, String role, String name, String projectCode, Integer level) {
         LambdaQueryWrapper<Project> wrapper = new LambdaQueryWrapper<>();
 
-        // 部门经理 + 全部数据权限 → 看所有项目
-        // 否则按角色的数据权限过滤
+        // 数据权限过滤
         if (!Constants.ROLE_DEPT_MANAGER.equals(role)) {
-            // 查用户的角色数据权限
             SysUser user = sysUserMapper.selectById(userId);
             if (user != null && user.getRoleId() != null) {
                 SysRole userRole = roleService.getById(user.getRoleId());
                 if (userRole != null && "custom".equals(userRole.getDataScope())) {
-                    // 自定义数据权限：只看指定项目
                     List<Long> projectIds = roleService.getRoleProjectIds(user.getRoleId());
-                    if (projectIds.isEmpty()) {
-                        return new java.util.ArrayList<>();
-                    }
+                    if (projectIds.isEmpty()) return new java.util.ArrayList<>();
                     wrapper.in(Project::getId, projectIds);
                 } else {
-                    // 默认：PM只看自己负责的项目
                     wrapper.eq(Project::getPmId, userId);
                 }
             } else {
                 wrapper.eq(Project::getPmId, userId);
             }
         }
+
+        // 查询条件
+        if (name != null && !name.trim().isEmpty()) {
+            wrapper.like(Project::getName, name.trim());
+        }
+        if (projectCode != null && !projectCode.trim().isEmpty()) {
+            wrapper.like(Project::getProjectCode, projectCode.trim());
+        }
+        if (level != null) {
+            wrapper.eq(Project::getLevel, level);
+        }
+
         wrapper.orderByDesc(Project::getCreatedAt);
 
         List<Project> projects = list(wrapper);
         fillPmNames(projects);
+        fillOpsStartDates(projects);
         return projects;
     }
 
@@ -262,6 +295,29 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
             if (pm != null) {
                 project.setPmName(pm.getRealName());
             }
+        }
+    }
+
+    /**
+     * 填充运维阶段的开始日期，作为项目结束日期展示
+     */
+    private void fillOpsStartDates(List<Project> projects) {
+        if (projects == null || projects.isEmpty()) return;
+
+        List<Long> projectIds = projects.stream().map(Project::getId).collect(Collectors.toList());
+
+        // 批量查询所有项目的「运维」阶段
+        List<ProjectStage> opsStages = projectStageMapper.selectList(
+                new LambdaQueryWrapper<ProjectStage>()
+                        .in(ProjectStage::getProjectId, projectIds)
+                        .eq(ProjectStage::getStageName, "运维"));
+
+        Map<Long, LocalDate> opsDateMap = opsStages.stream()
+                .filter(s -> s.getActualStart() != null)
+                .collect(Collectors.toMap(ProjectStage::getProjectId, ProjectStage::getActualStart, (a, b) -> a));
+
+        for (Project project : projects) {
+            project.setOpsStartDate(opsDateMap.get(project.getId()));
         }
     }
 }

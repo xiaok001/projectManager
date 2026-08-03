@@ -62,9 +62,32 @@ public class ProjectStageServiceImpl extends ServiceImpl<ProjectStageMapper, Pro
         if (dto.getProgress() != null) stage.setProgress(dto.getProgress());
         stage.setUpdatedBy(operatorId);
 
-        // 如果实际结束日期已填且状态不是已完成，自动更新为已完成
-        if (stage.getActualEnd() != null && !Constants.STAGE_COMPLETED.equals(stage.getStatus())) {
-            stage.setStatus(Constants.STAGE_COMPLETED);
+        // 根据进度自动联动状态
+        if (dto.getProgress() != null) {
+            int progress = dto.getProgress();
+            if (progress >= 100) {
+                stage.setProgress(100);
+                stage.setStatus(Constants.STAGE_COMPLETED);
+                // 自动填写实际结束日期
+                if (stage.getActualEnd() == null) {
+                    stage.setActualEnd(LocalDate.now());
+                }
+            } else if (progress > 0) {
+                stage.setStatus(Constants.STAGE_IN_PROGRESS);
+                // 自动填写实际开始日期
+                if (stage.getActualStart() == null) {
+                    stage.setActualStart(LocalDate.now());
+                }
+            } else if (progress == 0) {
+                if (stage.getActualStart() == null) {
+                    stage.setStatus(Constants.STAGE_NOT_STARTED);
+                }
+            }
+        }
+
+        // 进度 < 100 时清除实际结束日期（允许回退进度）
+        if (stage.getProgress() != null && stage.getProgress() < 100) {
+            stage.setActualEnd(null);
         }
 
         updateById(stage);

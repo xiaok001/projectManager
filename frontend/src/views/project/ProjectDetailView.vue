@@ -124,6 +124,52 @@
           </el-table>
         </el-tab-pane>
 
+        <!-- ========== 待办 Tab ========== -->
+        <el-tab-pane label="待办" name="todos">
+          <div style="margin-bottom:12px;text-align:right">
+            <el-button type="primary" @click="openTodoDialog(null)">新增待办</el-button>
+          </div>
+          <el-table :data="todos" border stripe style="width:100%">
+            <el-table-column prop="todoCode" label="待办编号" width="180" show-overflow-tooltip />
+            <el-table-column prop="title" label="待办事项" min-width="200" show-overflow-tooltip />
+            <el-table-column prop="stageName" label="所属阶段" width="100" />
+            <el-table-column prop="source" label="来源" width="100" show-overflow-tooltip />
+            <el-table-column prop="priority" label="优先级" width="80" align="center">
+              <template #default="{ row }">
+                <el-tag :type="row.priority==='高'?'danger':row.priority==='中'?'warning':'info'" size="small">{{ row.priority }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="urgency" label="紧急程度" width="90" align="center">
+              <template #default="{ row }">
+                <el-tag :type="row.urgency==='特急'?'danger':row.urgency==='紧急'?'warning':''" size="small">{{ row.urgency }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="ownerName" label="负责人" width="90" />
+            <el-table-column prop="planEnd" label="计划完成" width="110" />
+            <el-table-column label="进度" width="110">
+              <template #default="{ row }">
+                <el-progress :percentage="row.progress||0" :stroke-width="14" :text-inside="true" />
+              </template>
+            </el-table-column>
+            <el-table-column prop="status" label="状态" width="80" align="center">
+              <template #default="{ row }">
+                <el-tag :type="todoStatusType(row.status)" size="small">{{ row.status }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="remark" label="备注" min-width="140" show-overflow-tooltip />
+            <el-table-column label="操作" width="120" align="center" fixed="right">
+              <template #default="{ row }">
+                <el-button type="primary" link @click="openTodoDialog(row)">编辑</el-button>
+                <el-popconfirm title="确认删除此待办？" @confirm="handleDeleteTodo(row.id)">
+                  <template #reference>
+                    <el-button type="danger" link>删除</el-button>
+                  </template>
+                </el-popconfirm>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+
         <!-- ========== 变更记录 Tab (修改前后对比) ========== -->
         <el-tab-pane label="变更记录" name="changes">
           <div style="margin-bottom:16px;text-align:right">
@@ -224,7 +270,7 @@
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="完成进度">
-              <el-slider v-model="stageForm.progress" :min="0" :max="100" show-input />
+              <el-slider v-model="stageForm.progress" :min="0" :max="100" show-input @change="onProgressChange" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -324,6 +370,101 @@
         <el-button type="primary" :loading="savingChange" @click="saveChange">保存</el-button>
       </template>
     </el-dialog>
+
+    <!-- ========== 待办编辑弹窗 ========== -->
+    <el-dialog v-model="todoDialogVisible" :title="todoForm.id ? '编辑待办' : '新增待办'" width="700px" destroy-on-close>
+      <el-form :model="todoForm" label-width="100px">
+        <el-form-item label="待办事项">
+          <el-input v-model="todoForm.title" placeholder="请输入待办事项" />
+        </el-form-item>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="所属阶段">
+              <el-select v-model="todoForm.stageId" placeholder="选择阶段" clearable style="width:100%">
+                <el-option v-for="s in stages" :key="s.id" :value="s.id" :label="s.stageName" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="来源">
+              <el-select v-model="todoForm.source" placeholder="选择来源" clearable filterable allow-create style="width:100%">
+                <el-option value="会议纪要" label="会议纪要" />
+                <el-option value="客户需求" label="客户需求" />
+                <el-option value="内部评估" label="内部评估" />
+                <el-option value="风险跟踪" label="风险跟踪" />
+                <el-option value="其他" label="其他" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="8">
+            <el-form-item label="优先级">
+              <el-select v-model="todoForm.priority" style="width:100%">
+                <el-option value="高" label="高" /><el-option value="中" label="中" /><el-option value="低" label="低" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="紧急程度">
+              <el-select v-model="todoForm.urgency" style="width:100%">
+                <el-option value="特急" label="特急" /><el-option value="紧急" label="紧急" /><el-option value="普通" label="普通" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="负责人">
+              <el-select v-model="todoForm.ownerId" placeholder="选择" filterable clearable style="width:100%">
+                <el-option v-for="u in users" :key="u.id" :value="u.id" :label="u.realName" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="计划开始">
+              <el-date-picker v-model="todoForm.planStart" type="date" value-format="YYYY-MM-DD" style="width:100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="计划完成">
+              <el-date-picker v-model="todoForm.planEnd" type="date" value-format="YYYY-MM-DD" style="width:100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="完成百分比">
+              <el-slider v-model="todoForm.progress" :min="0" :max="100" show-input />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="状态">
+              <el-select v-model="todoForm.status" style="width:100%">
+                <el-option value="待处理" label="待处理" /><el-option value="进行中" label="进行中" />
+                <el-option value="已完成" label="已完成" /><el-option value="已取消" label="已取消" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="阻塞问题">
+          <el-input v-model="todoForm.blockIssue" type="textarea" :rows="2" />
+        </el-form-item>
+        <el-form-item label="风险说明">
+          <el-input v-model="todoForm.riskDesc" type="textarea" :rows="2" />
+        </el-form-item>
+        <el-form-item label="输出物">
+          <el-input v-model="todoForm.outputDesc" placeholder="预期交付物描述" />
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="todoForm.remark" type="textarea" :rows="2" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="todoDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="savingTodo" @click="saveTodo">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -331,7 +472,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { projectApi, stageApi, riskApi, changeLogApi } from '../../api'
+import { projectApi, stageApi, riskApi, changeLogApi, todoApi, authApi } from '../../api'
 
 const route = useRoute()
 const router = useRouter()
@@ -375,6 +516,17 @@ const changeForm = reactive<any>({
   changeType: '', changeField: '', changeDesc: '', beforeValue: '', afterValue: '',
 })
 
+// --- 待办 ---
+const todos = ref<any[]>([])
+const users = ref<any[]>([])
+const todoDialogVisible = ref(false)
+const savingTodo = ref(false)
+const todoForm = reactive<any>({
+  id: 0, title: '', stageId: null, source: '', priority: '中', urgency: '普通',
+  ownerId: null, planStart: '', planEnd: '', status: '待处理', progress: 0,
+  blockIssue: '', riskDesc: '', outputDesc: '', remark: '',
+})
+
 const activeTab = ref((route.query.tab as string) || 'stages')
 
 // --- Helpers ---
@@ -391,17 +543,21 @@ const changeTypeColor = (t: string) => ({ '人员变更': 'blue', '内容变更'
 const fetchAll = async () => {
   loading.value = true
   try {
-    const [projRes, stageRes, riskRes, changeRes]: any[] = await Promise.all([
+    const [projRes, stageRes, riskRes, changeRes, todoRes, userRes]: any[] = await Promise.all([
       projectApi.detail(projectId),
       stageApi.listByProject(projectId),
       riskApi.listByProject(projectId),
       changeLogApi.list(projectId),
+      todoApi.listByProject(projectId),
+      authApi.getUsers(),
     ])
     project.value = projRes.data || {}
     satisfactionScore.value = project.value.satisfactionScore ?? 5
     stages.value = stageRes.data || []
     risks.value = riskRes.data || []
     changeLogs.value = changeRes.data || []
+    todos.value = todoRes.data || []
+    users.value = userRes.data || []
   } catch { /* handled */ }
   loading.value = false
 }
@@ -417,6 +573,20 @@ const saveSatisfaction = async () => {
 }
 
 // --- 阶段编辑 ---
+// 进度滑块联动状态
+function onProgressChange(val: number) {
+  if (val >= 100) {
+    stageForm.progress = 100
+    stageForm.status = '已完成'
+  } else if (val > 0) {
+    stageForm.status = '进行中'
+  } else if (val === 0) {
+    if (!stageForm.actualStart) {
+      stageForm.status = '未开始'
+    }
+  }
+}
+
 const openStageDialog = (row: any) => {
   Object.assign(stageForm, {
     id: row.id, stageName: row.stageName, planStart: row.planStart, planEnd: row.planEnd,
@@ -494,6 +664,54 @@ const saveChange = async () => {
     await fetchAll()
   } catch { /* handled */ }
   savingChange.value = false
+}
+
+// --- 待办操作 ---
+function todoStatusType(status: string) {
+  return { '待处理': 'info', '进行中': 'primary', '已完成': 'success', '已取消': 'info', '已逾期': 'danger' }[status] ?? 'info'
+}
+
+function openTodoDialog(row: any) {
+  if (row) {
+    Object.assign(todoForm, {
+      id: row.id, title: row.title, stageId: row.stageId, source: row.source || '',
+      priority: row.priority || '中', urgency: row.urgency || '普通', ownerId: row.ownerId,
+      planStart: row.planStart, planEnd: row.planEnd, status: row.status || '待处理',
+      progress: row.progress || 0, blockIssue: row.blockIssue || '', riskDesc: row.riskDesc || '',
+      outputDesc: row.outputDesc || '', remark: row.remark || '',
+    })
+  } else {
+    Object.assign(todoForm, {
+      id: 0, title: '', stageId: null, source: '', priority: '中', urgency: '普通',
+      ownerId: null, planStart: '', planEnd: '', status: '待处理', progress: 0,
+      blockIssue: '', riskDesc: '', outputDesc: '', remark: '',
+    })
+  }
+  todoDialogVisible.value = true
+}
+
+async function saveTodo() {
+  if (!todoForm.title) { ElMessage.warning('请输入待办事项'); return }
+  savingTodo.value = true
+  try {
+    if (todoForm.id) {
+      await todoApi.update(todoForm.id, { ...todoForm })
+    } else {
+      await todoApi.create(projectId, { ...todoForm })
+    }
+    todoDialogVisible.value = false
+    ElMessage.success(todoForm.id ? '待办已更新' : '待办已创建')
+    await fetchAll()
+  } catch { /* handled */ }
+  savingTodo.value = false
+}
+
+async function handleDeleteTodo(id: number) {
+  try {
+    await todoApi.delete(id)
+    ElMessage.success('待办已删除')
+    await fetchAll()
+  } catch { /* handled */ }
 }
 
 onMounted(() => { fetchAll() })

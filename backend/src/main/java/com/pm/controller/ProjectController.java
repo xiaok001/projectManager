@@ -28,10 +28,14 @@ public class ProjectController {
     }
 
     @GetMapping
-    public R<List<Project>> list(HttpServletRequest request) {
+    public R<List<Project>> list(
+            HttpServletRequest request,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String projectCode,
+            @RequestParam(required = false) Integer level) {
         Long userId = (Long) request.getAttribute("userId");
         String role = (String) request.getAttribute("role");
-        return R.ok(projectService.listProjects(userId, role));
+        return R.ok(projectService.listProjects(userId, role, name, projectCode, level));
     }
 
     @GetMapping("/{id}")
