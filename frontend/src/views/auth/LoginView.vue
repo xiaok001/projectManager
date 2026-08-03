@@ -6,7 +6,7 @@
         <div class="logo-icon">
           <el-icon :size="22"><Briefcase /></el-icon>
         </div>
-        <span class="brand-title">PMM 协同管理平台</span>
+        <span class="brand-title">PMM 多项目协同管理平台</span>
       </div>
 
       <div class="brand-content">
