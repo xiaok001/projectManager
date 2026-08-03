@@ -133,10 +133,28 @@ const rules: FormRules = {
   realName: [{ required: true, message: '请输入真实姓名', trigger: 'blur' }],
   roleId: [{ required: true, message: '请选择角色', trigger: 'change' }],
   email: [
-    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' },
+    {
+      validator: (_rule: any, value: string, callback: any) => {
+        if (!value || value.trim() === '') return callback()
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          return callback(new Error('请输入正确的邮箱格式'))
+        }
+        callback()
+      },
+      trigger: 'blur',
+    },
   ],
   phone: [
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号格式', trigger: 'blur' },
+    {
+      validator: (_rule: any, value: string, callback: any) => {
+        if (!value || value.trim() === '') return callback()
+        if (!/^1[3-9]\d{9}$/.test(value)) {
+          return callback(new Error('请输入正确的手机号格式'))
+        }
+        callback()
+      },
+      trigger: 'blur',
+    },
   ],
 }
 

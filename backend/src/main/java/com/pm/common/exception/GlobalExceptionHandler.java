@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public R<Void> handleValidationException(MethodArgumentNotValidException e) {
         String message = e.getBindingResult().getFieldErrors().stream()
-                .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
+                .map(fieldError -> fieldError.getDefaultMessage())
                 .collect(Collectors.joining("; "));
         log.warn("Validation failed: {}", message);
         return R.fail(400, message);
