@@ -16,8 +16,10 @@ public class UserDTO {
     private String email;
     private String phone;
 
-    @NotBlank(message = "角色不能为空")
-    private String role;  // DEPT_MANAGER / PM
+    private String role;  // DEPT_MANAGER / PM (兼容旧数据)
+
+    /** 角色ID(关联sys_role) */
+    private Long roleId;
 
     private Integer status = 1;
 }

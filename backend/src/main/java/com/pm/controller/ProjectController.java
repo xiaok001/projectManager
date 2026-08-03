@@ -60,4 +60,12 @@ public class ProjectController {
         projectService.updateSatisfaction(id, score, userId, role);
         return R.ok();
     }
+
+    @DeleteMapping("/{id}")
+    public R<Void> delete(@PathVariable Long id, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        String role = (String) request.getAttribute("role");
+        projectService.deleteProject(id, userId, role);
+        return R.ok();
+    }
 }

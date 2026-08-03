@@ -38,11 +38,23 @@
         </template>
       </el-table-column>
       <el-table-column prop="currentStage" label="当前阶段" width="120" />
-      <el-table-column label="操作" width="100" align="center" fixed="right">
+      <el-table-column label="操作" width="150" align="center" fixed="right">
         <template #default="{ row }">
           <el-button type="primary" link @click="router.push(`/projects/${row.id}`)">
             详情
           </el-button>
+          <el-popconfirm
+            :title="`确认删除项目「${row.name}」？将同时删除该项目下的所有阶段、风险、变更记录，此操作不可恢复。`"
+            confirm-button-text="确认删除"
+            cancel-button-text="取消"
+            confirm-button-type="danger"
+            width="360"
+            @confirm="handleDelete(row)"
+          >
+            <template #reference>
+              <el-button type="danger" link>删除</el-button>
+            </template>
+          </el-popconfirm>
         </template>
       </el-table-column>
     </el-table>
@@ -63,6 +75,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { projectApi } from '../../api'
 
 const router = useRouter()
@@ -91,6 +104,14 @@ const fetchProjects = async () => {
 }
 
 onMounted(() => { fetchProjects() })
+
+async function handleDelete(row: any) {
+  try {
+    await projectApi.delete(row.id)
+    ElMessage.success(`项目「${row.name}」已删除`)
+    fetchProjects()
+  } catch { /* handled */ }
+}
 </script>
 
 <style scoped>

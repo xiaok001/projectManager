@@ -68,6 +68,7 @@ export const projectApi = {
   detail: (id: number) => api.get(`/projects/${id}`),
   create: (data: any) => api.post('/projects', data),
   update: (id: number, data: any) => api.put(`/projects/${id}`, data),
+  delete: (id: number) => api.delete(`/projects/${id}`),
   updateSatisfaction: (id: number, score: number) =>
     api.put(`/projects/${id}/satisfaction`, { score }),
 }

@@ -4,11 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pm.common.constants.Constants;
 import com.pm.common.exception.BusinessException;
-import com.pm.mapper.ProjectMapper;
-import com.pm.mapper.SysUserMapper;
+import com.pm.mapper.*;
 import com.pm.model.dto.ProjectDTO;
-import com.pm.model.entity.Project;
-import com.pm.model.entity.SysUser;
+import com.pm.model.entity.*;
 import com.pm.service.ProjectService;
 import com.pm.service.ProjectStageService;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +24,10 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     private final ProjectMapper projectMapper;
     private final ProjectStageService projectStageService;
     private final SysUserMapper sysUserMapper;
+    private final ProjectStageMapper projectStageMapper;
+    private final ProjectRiskMapper projectRiskMapper;
+    private final ProjectChangeLogMapper changeLogMapper;
+    private final AiRiskSuggestionMapper aiSuggestionMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -132,6 +134,29 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
                 .update();
 
         log.info("Satisfaction updated: projectId={}, score={}, operatorId={}", id, score, userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteProject(Long id, Long userId, String role) {
+        Project project = getById(id);
+        if (project == null) {
+            throw new BusinessException("项目不存在: " + id);
+        }
+        checkViewPermission(project, userId, role);
+
+        // 级联删除：阶段、风险、变更记录、AI建议
+        projectStageMapper.delete(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ProjectStage>()
+                .eq(ProjectStage::getProjectId, id));
+        projectRiskMapper.delete(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ProjectRisk>()
+                .eq(ProjectRisk::getProjectId, id));
+        changeLogMapper.delete(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ProjectChangeLog>()
+                .eq(ProjectChangeLog::getProjectId, id));
+        aiSuggestionMapper.delete(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<AiRiskSuggestion>()
+                .eq(AiRiskSuggestion::getProjectId, id));
+
+        removeById(id);
+        log.info("Project deleted: id={}, operatorId={}", id, userId);
     }
 
     // ======================== Permission Helpers ========================

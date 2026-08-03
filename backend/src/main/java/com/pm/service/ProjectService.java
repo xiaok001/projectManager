@@ -12,4 +12,5 @@ public interface ProjectService extends IService<Project> {
     List<Project> listProjects(Long userId, String role);
     Project getProjectDetail(Long id, Long userId, String role);
     void updateSatisfaction(Long id, Integer score, Long userId, String role);
+    void deleteProject(Long id, Long userId, String role);
 }
