@@ -19,7 +19,7 @@
         <el-table-column prop="role" label="角色" width="120">
           <template #default="{ row }">
             <el-tag :type="row.role === 'DEPT_MANAGER' ? 'danger' : 'primary'" size="small">
-              {{ row.role === 'DEPT_MANAGER' ? '部门经理' : '项目经理' }}
+              {{ getRoleName(row.roleId) }}
             </el-tag>
           </template>
         </el-table-column>
@@ -76,10 +76,9 @@
         <el-form-item label="手机号">
           <el-input v-model="form.phone" placeholder="请输入手机号" />
         </el-form-item>
-        <el-form-item label="角色" prop="role">
-          <el-select v-model="form.role" placeholder="请选择角色">
-            <el-option value="DEPT_MANAGER" label="部门经理" />
-            <el-option value="PM" label="项目经理" />
+        <el-form-item label="角色" prop="roleId">
+          <el-select v-model="form.roleId" placeholder="请选择角色" style="width:100%">
+            <el-option v-for="r in roleList" :key="r.id" :value="r.id" :label="r.roleName" />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
@@ -109,6 +108,7 @@ const loading = ref(false)
 const submitting = ref(false)
 const dialogVisible = ref(false)
 const users = ref<any[]>([])
+const roleList = ref<any[]>([])
 const editingId = ref<number | null>(null)
 const formRef = ref<FormInstance>()
 
@@ -121,17 +121,29 @@ const form = ref({
   email: '',
   phone: '',
   role: 'PM',
+  roleId: null as number | null,
   status: 1,
 })
 
 const rules: FormRules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   realName: [{ required: true, message: '请输入真实姓名', trigger: 'blur' }],
-  role: [{ required: true, message: '请选择角色', trigger: 'change' }],
+  roleId: [{ required: true, message: '请选择角色', trigger: 'change' }],
 }
 
-onMounted(() => {
+function getRoleName(roleId: number | null) {
+  if (!roleId) return '-'
+  const r = roleList.value.find(r => r.id === roleId)
+  return r ? r.roleName : '-'
+}
+
+onMounted(async () => {
   loadUsers()
+  // 加载角色列表
+  try {
+    const res: any = await api.get('/roles')
+    roleList.value = res.data || []
+  } catch { /* ignore */ }
 })
 
 async function loadUsers() {
@@ -153,6 +165,7 @@ function openDialog(row: any | null) {
       email: row.email || '',
       phone: row.phone || '',
       role: row.role,
+      roleId: row.roleId || null,
       status: row.status,
     }
   } else {
@@ -164,6 +177,7 @@ function openDialog(row: any | null) {
       email: '',
       phone: '',
       role: 'PM',
+      roleId: null,
       status: 1,
     }
   }

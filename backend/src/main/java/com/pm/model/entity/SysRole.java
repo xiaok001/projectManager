@@ -1,28 +1,18 @@
 package com.pm.model.entity;
-
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
-/**
- * 用户表实体
- */
 @Data
-@TableName("sys_user")
-public class SysUser {
+@TableName("sys_role")
+public class SysRole {
     @TableId(type = IdType.AUTO)
     private Long id;
-    private String username;
-    private String password;
-    private String realName;
-    private String email;
-    private String phone;
-    /** 角色: DEPT_MANAGER / PM */
-    private String role;
-    /** 角色ID(关联sys_role) */
-    private Long roleId;
-    /** 状态: 1启用 0禁用 */
+    private String roleName;
+    private String roleKey;
+    private Integer sortOrder;
     private Integer status;
+    private String remark;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
     @TableField(fill = FieldFill.INSERT_UPDATE)

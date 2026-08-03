@@ -218,3 +218,45 @@ INSERT INTO sys_user (username, password, real_name, email, role, status) VALUES
 
 -- 7个标准阶段名称(供后端初始化使用,不做单独表,硬编码在服务层)
 -- 启动 / 调研 / 开发 / 测试验收 / 上线 / 试运行 / 运维
+
+-- -----------------------------------------------------------
+-- 10. 角色表
+-- -----------------------------------------------------------
+CREATE TABLE IF NOT EXISTS sys_role (
+    id              BIGINT NOT NULL AUTO_INCREMENT,
+    role_name       VARCHAR(50) NOT NULL COMMENT '角色名称',
+    role_key        VARCHAR(50) NOT NULL COMMENT '角色标识',
+    sort_order      INT DEFAULT 0,
+    status          TINYINT DEFAULT 1,
+    remark          VARCHAR(200) DEFAULT NULL,
+    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_role_key (role_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色表';
+
+-- -----------------------------------------------------------
+-- 11. 权限表
+-- -----------------------------------------------------------
+CREATE TABLE IF NOT EXISTS sys_permission (
+    id              BIGINT NOT NULL AUTO_INCREMENT,
+    parent_id       BIGINT DEFAULT 0,
+    perm_name       VARCHAR(50) NOT NULL COMMENT '权限名称',
+    perm_key        VARCHAR(100) NOT NULL COMMENT '权限标识',
+    type            VARCHAR(10) NOT NULL COMMENT 'menu/button',
+    path            VARCHAR(200) DEFAULT NULL,
+    icon            VARCHAR(50) DEFAULT NULL,
+    sort_order      INT DEFAULT 0,
+    status          TINYINT DEFAULT 1,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_perm_key (perm_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='权限表';
+
+-- -----------------------------------------------------------
+-- 12. 角色-权限关联表
+-- -----------------------------------------------------------
+CREATE TABLE IF NOT EXISTS sys_role_permission (
+    role_id         BIGINT NOT NULL,
+    permission_id   BIGINT NOT NULL,
+    PRIMARY KEY (role_id, permission_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色权限关联表';

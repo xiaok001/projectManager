@@ -69,6 +69,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '用户管理', icon: 'UserFilled', roles: ['DEPT_MANAGER'] },
       },
       {
+        path: 'roles',
+        name: 'RoleManagement',
+        component: () => import('../views/role/RoleManagementView.vue'),
+        meta: { title: '角色管理', icon: 'User', roles: ['DEPT_MANAGER'] },
+      },
+      {
         path: 'logs',
         name: 'OperationLog',
         component: () => import('../views/log/OperationLogView.vue'),

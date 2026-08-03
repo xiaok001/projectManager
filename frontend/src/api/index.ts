@@ -133,6 +133,23 @@ export const userApi = {
   delete: (id: number) => api.delete(`/users/${id}`),
 }
 
+// ============ 角色管理接口 ============
+export const roleApi = {
+  list: () => api.get('/roles'),
+  create: (data: any) => api.post('/roles', data),
+  update: (id: number, data: any) => api.put(`/roles/${id}`, data),
+  delete: (id: number) => api.delete(`/roles/${id}`),
+  getPermissions: (id: number) => api.get(`/roles/${id}/permissions`),
+  assignPermissions: (id: number, permissionIds: number[]) =>
+    api.put(`/roles/${id}/permissions`, { permissionIds }),
+}
+
+// ============ 权限接口 ============
+export const permissionApi = {
+  tree: () => api.get('/permissions/tree'),
+  treeWithChecked: (roleId: number) => api.get(`/permissions/tree/${roleId}`),
+}
+
 // ============ 操作日志接口 ============
 export const operationLogApi = {
   list: (params: { pageNum?: number; pageSize?: number; module?: string; operation?: string }) =>

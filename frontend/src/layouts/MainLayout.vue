@@ -43,6 +43,10 @@
             <el-icon><UserFilled /></el-icon>
             <template #title>用户管理</template>
           </el-menu-item>
+          <el-menu-item index="/roles">
+            <el-icon><User /></el-icon>
+            <template #title>角色管理</template>
+          </el-menu-item>
           <el-menu-item index="/logs">
             <el-icon><Notebook /></el-icon>
             <template #title>操作日志</template>
