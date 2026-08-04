@@ -28,6 +28,7 @@ public class EmailDigestController {
     public R<Void> testEmail(@RequestParam String email) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom("多项目管理系统机器人 <nieyankang0205@163.com>");
             message.setTo(email.trim());
             message.setSubject("项目管理系统 - 邮件配置测试");
             message.setText("这是一封测试邮件，说明您的邮件配置正确。\n\n发送时间：" + java.time.LocalDateTime.now());

@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/scheduled-tasks")
@@ -28,6 +29,12 @@ public class ScheduledTaskController {
     @PutMapping("/{id}/toggle")
     public R<Void> toggle(@PathVariable Long id) {
         taskService.toggleStatus(id);
+        return R.ok();
+    }
+
+    @PutMapping("/{id}/cron")
+    public R<Void> updateCron(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        taskService.updateCron(id, body.get("cronExpr"));
         return R.ok();
     }
 

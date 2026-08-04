@@ -5,4 +5,5 @@ import com.pm.model.entity.EmailDigestLog;
 
 public interface EmailDigestService extends IService<EmailDigestLog> {
     void sendDailyDigest();
+    void sendDailyTodoAndRiskDigest();
 }

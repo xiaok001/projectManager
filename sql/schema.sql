@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS project (
     expected_end_date   DATE            DEFAULT NULL COMMENT '预期结束日期',
     wbs_online_url      VARCHAR(500)    DEFAULT NULL COMMENT 'WBS在线文档链接',
     wbs_offline_file    VARCHAR(500)    DEFAULT NULL COMMENT 'WBS离线附件路径',
+    wbs_offline_name    VARCHAR(200)    DEFAULT NULL COMMENT 'WBS附件原始文件名',
     current_stage       VARCHAR(50)     DEFAULT NULL COMMENT '当前阶段',
     status              VARCHAR(20)     NOT NULL DEFAULT '进行中' COMMENT '项目状态: 进行中/已完成/已暂停',
     satisfaction_score  TINYINT         DEFAULT NULL COMMENT '客户满意度(1-10)',

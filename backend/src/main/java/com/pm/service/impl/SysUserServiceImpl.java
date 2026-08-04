@@ -199,6 +199,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         // 发送邮件
         try {
             SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom("多项目管理系统机器人 <nieyankang0205@163.com>");
             message.setTo(email.trim());
             message.setSubject("多项目管理系统 - 密码重置通知");
             message.setText("尊敬的 " + user.getRealName() + "：\n\n"

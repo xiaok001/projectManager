@@ -59,7 +59,7 @@ ai:
 
 # 文件上传配置
 file:
-  upload-root: ./project-files
+  upload-root: /opt/nyk/pm/project-files
 
 logging:
   level:

@@ -33,6 +33,8 @@ public class Project {
     private String wbsOnlineUrl;
     /** WBS离线附件路径 */
     private String wbsOfflineFile;
+    /** WBS附件原始文件名 */
+    private String wbsOfflineName;
     /** 当前阶段 */
     private String currentStage;
     /** 项目状态: 进行中/已完成/已暂停 */

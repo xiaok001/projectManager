@@ -28,6 +28,7 @@ public class ScheduledTaskServiceImpl extends ServiceImpl<ScheduledTaskMapper, S
     private final ProjectRiskService riskService;
     private final ProjectTodoService todoService;
     private final AiRiskSuggestionService suggestionService;
+    private final EmailDigestService emailDigestService;
 
     @Override
     public List<ScheduledTask> listAll() {
@@ -42,6 +43,19 @@ public class ScheduledTaskServiceImpl extends ServiceImpl<ScheduledTaskMapper, S
         task.setStatus(task.getStatus() == 1 ? 0 : 1);
         updateById(task);
         log.info("定时任务状态切换: task={}, status={}", task.getTaskName(), task.getStatus());
+    }
+
+    @Override
+    @Transactional
+    public void updateCron(Long id, String cronExpr) {
+        if (cronExpr == null || cronExpr.trim().isEmpty()) {
+            throw new BusinessException("Cron表达式不能为空");
+        }
+        ScheduledTask task = getById(id);
+        if (task == null) throw new BusinessException("任务不存在");
+        task.setCronExpr(cronExpr.trim());
+        updateById(task);
+        log.info("定时任务频率更新: task={}, cron={}", task.getTaskName(), cronExpr);
     }
 
     @Override
@@ -70,6 +84,10 @@ public class ScheduledTaskServiceImpl extends ServiceImpl<ScheduledTaskMapper, S
                 case "nightlyAiRiskScan":
                     int count = suggestionService.scanAllProjectsForRisks();
                     resultMsg = "AI风险扫描完成，发现 " + count + " 条新建议";
+                    break;
+                case "dailyTodoAndRiskDigest":
+                    emailDigestService.sendDailyTodoAndRiskDigest();
+                    resultMsg = "项目待办与风险日报发送完成";
                     break;
                 default:
                     throw new BusinessException("未知任务: " + task.getTaskKey());

@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/projects")
@@ -117,21 +118,28 @@ public class ProjectController {
             Path dir = Paths.get(uploadRoot, project.getProjectCode(), dateDir);
             Files.createDirectories(dir);
 
-            // 保留原始文件名
+            // 文件名处理：用UUID避免中文/特殊字符问题，保留原始扩展名
             String originalName = file.getOriginalFilename();
             if (originalName == null || originalName.isBlank()) {
                 originalName = "wbs_attachment";
             }
-            Path target = dir.resolve(originalName);
+            String ext = "";
+            int dotIdx = originalName.lastIndexOf('.');
+            if (dotIdx > 0) {
+                ext = originalName.substring(dotIdx); // 如 .xlsx
+            }
+            String storedName = UUID.randomUUID().toString().replace("-", "") + ext;
+            Path target = dir.resolve(storedName);
             file.transferTo(target.toFile());
 
-            // 更新数据库（相对路径）
-            String relativePath = project.getProjectCode() + "/" + dateDir + "/" + originalName;
+            // 更新数据库
+            String relativePath = project.getProjectCode() + "/" + dateDir + "/" + storedName;
             project.setWbsOfflineFile(relativePath);
+            project.setWbsOfflineName(originalName);
             projectService.updateById(project);
 
-            log.info("WBS附件上传成功: projectId={}, path={}", id, relativePath);
-            return R.ok(Map.of("path", relativePath, "fileName", originalName));
+            log.info("WBS附件上传成功: projectId={}, path={}, originalName={}", id, relativePath, originalName);
+            return R.ok(Map.of("path", relativePath, "fileName", originalName, "storedName", storedName));
         } catch (IOException e) {
             log.error("WBS附件上传失败", e);
             throw new BusinessException("文件上传失败: " + e.getMessage());

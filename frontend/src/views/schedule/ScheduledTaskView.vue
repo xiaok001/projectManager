@@ -17,9 +17,39 @@
             <el-tag size="small" effect="plain">{{ row.taskKey }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="cronExpr" label="Cron表达式" width="150">
+        <el-table-column label="执行频率" width="280">
           <template #default="{ row }">
-            <code class="cron-code">{{ row.cronExpr }}</code>
+            <div v-if="row._editingCron" class="cron-edit">
+              <el-popover trigger="click" placement="bottom" :width="320">
+                <template #reference>
+                  <el-input v-model="row._cronValue" placeholder="如: 0 0 22 * * ?" size="small" style="width:180px">
+                    <template #append>
+                      <el-icon><QuestionFilled /></el-icon>
+                    </template>
+                  </el-input>
+                </template>
+                <div class="cron-help">
+                  <div class="cron-help-title">常用 Cron 表达式</div>
+                  <div v-for="item in cronExamples" :key="item.expr" class="cron-help-item" @click="row._cronValue = item.expr">
+                    <code>{{ item.expr }}</code>
+                    <span>{{ item.label }}</span>
+                  </div>
+                  <div class="cron-help-title" style="margin-top:8px">格式说明</div>
+                  <div class="cron-help-format">秒 分 时 日 月 周</div>
+                  <div class="cron-help-format">例: <code>0 0 22 * * ?</code> = 每天22:00</div>
+                </div>
+              </el-popover>
+              <el-button type="primary" link size="small" @click="saveCron(row)" style="margin-left:4px">
+                <el-icon><Check /></el-icon>
+              </el-button>
+              <el-button link size="small" @click="row._editingCron = false">
+                <el-icon><Close /></el-icon>
+              </el-button>
+            </div>
+            <div v-else class="cron-display" @click="startEditCron(row)">
+              <code class="cron-code">{{ row.cronExpr }}</code>
+              <el-icon class="cron-edit-icon"><Edit /></el-icon>
+            </div>
           </template>
         </el-table-column>
         <el-table-column prop="description" label="任务说明" min-width="250" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
@@ -94,8 +124,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Timer, Refresh, CaretRight, Notebook } from '@element-plus/icons-vue'
+import { Timer, Refresh, CaretRight, Notebook, Edit, Check, Close, QuestionFilled } from '@element-plus/icons-vue'
 import { scheduledTaskApi } from '../../api'
+import api from '../../api'
 
 const loading = ref(false)
 const logsLoading = ref(false)
@@ -106,15 +137,43 @@ const logPageNum = ref(1)
 const logPageSize = ref(20)
 const logTotal = ref(0)
 
+const cronExamples = [
+  { expr: '0 0 * * * ?', label: '每小时整点' },
+  { expr: '0 */30 * * * ?', label: '每30分钟' },
+  { expr: '0 0 9 * * ?', label: '每天 09:00' },
+  { expr: '0 0 22 * * ?', label: '每天 22:00' },
+  { expr: '0 30 8 * * 1-5', label: '工作日 08:30' },
+  { expr: '0 0 9 * * 1', label: '每周一 09:00' },
+  { expr: '0 0 0 1 * ?', label: '每月1号 00:00' },
+]
+
 onMounted(() => { loadTasks(); loadAllLogs() })
 
 async function loadTasks() {
   loading.value = true
   try {
     const res: any = await scheduledTaskApi.list()
-    tasks.value = (res.data || []).map((t: any) => ({ ...t, _running: false }))
+    tasks.value = (res.data || []).map((t: any) => ({ ...t, _running: false, _editingCron: false, _cronValue: t.cronExpr }))
   } catch { /* handled */ }
   loading.value = false
+}
+
+function startEditCron(row: any) {
+  row._cronValue = row.cronExpr
+  row._editingCron = true
+}
+
+async function saveCron(row: any) {
+  if (!row._cronValue || !row._cronValue.trim()) {
+    ElMessage.warning('请选择或输入Cron表达式')
+    return
+  }
+  try {
+    await api.put(`/scheduled-tasks/${row.id}/cron`, { cronExpr: row._cronValue })
+    row.cronExpr = row._cronValue
+    row._editingCron = false
+    ElMessage.success('执行频率已更新')
+  } catch { /* handled */ }
 }
 
 async function handleToggle(row: any) {
@@ -171,6 +230,56 @@ async function loadLogs() {
   font-size: 12px;
   font-family: 'Courier New', monospace;
 }
+.cron-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.cron-display:hover { background: #f0f5ff; }
+.cron-edit-icon { color: #c0c4cc; font-size: 14px; opacity: 0; transition: opacity 0.2s; }
+.cron-display:hover .cron-edit-icon { opacity: 1; }
+.cron-edit { display: flex; align-items: center; }
+
+/* Cron帮助弹窗 */
+.cron-help-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 6px;
+}
+.cron-help-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.15s;
+}
+.cron-help-item:hover { background: #f0f5ff; }
+.cron-help-item code {
+  background: #f5f7fa;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 11px;
+}
+.cron-help-item span { color: #909399; }
+.cron-help-format {
+  font-size: 12px;
+  color: #606266;
+  line-height: 1.8;
+}
+.cron-help-format code {
+  background: #f5f7fa;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
 .task-tag { margin-left: 10px; }
 .pagination-wrap {
   display: flex;

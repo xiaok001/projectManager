@@ -19,6 +19,7 @@ public class ScheduledTasks {
     private final ProjectTodoService todoService;
     private final AiRiskSuggestionService suggestionService;
     private final ScheduledTaskService taskService;
+    private final EmailDigestService emailDigestService;
 
     @Scheduled(cron = "0 0 * * * ?")
     public void refreshDelayedStages() {
@@ -49,6 +50,17 @@ public class ScheduledTasks {
         executeAndLog("nightlyAiRiskScan", "AI风险扫描", () -> {
             int count = suggestionService.scanAllProjectsForRisks();
             return "AI风险扫描完成，发现 " + count + " 条新建议";
+        });
+    }
+
+    /**
+     * 每天9:20 项目待办与风险日报
+     */
+    @Scheduled(cron = "0 20 9 * * ?")
+    public void dailyTodoAndRiskDigest() {
+        executeAndLog("dailyTodoAndRiskDigest", "项目待办与风险日报", () -> {
+            emailDigestService.sendDailyTodoAndRiskDigest();
+            return "项目待办与风险日报发送完成";
         });
     }
 

@@ -105,7 +105,7 @@
                     <el-icon :size="24"><Document /></el-icon>
                   </div>
                   <div class="wbs-file-meta">
-                    <span class="wbs-file-name">{{ getFileName(project.wbsOfflineFile) }}</span>
+                    <span class="wbs-file-name">{{ project.wbsOfflineName || getFileName(project.wbsOfflineFile) }}</span>
                     <span class="wbs-file-hint">点击下载或重新上传替换</span>
                   </div>
                 </div>
@@ -894,6 +894,7 @@ async function uploadWbsFile(file: File) {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     project.value.wbsOfflineFile = res.data.path
+    project.value.wbsOfflineName = res.data.fileName
     ElMessage.success('附件上传成功')
   } catch { /* handled */ }
   uploadingFile.value = false
@@ -901,7 +902,24 @@ async function uploadWbsFile(file: File) {
 }
 
 async function downloadWbsFile() {
-  window.open(`/api/v1/projects/${projectId}/wbs-file`, '_blank')
+  try {
+    const token = localStorage.getItem('token')
+    const res = await fetch(`/api/v1/projects/${projectId}/wbs-file`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    })
+    if (!res.ok) throw new Error('下载失败')
+    const blob = await res.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = project.value.wbsOfflineName || 'wbs_attachment'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    window.URL.revokeObjectURL(url)
+  } catch {
+    ElMessage.error('附件下载失败')
+  }
 }
 
 onMounted(() => { fetchAll() })
