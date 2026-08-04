@@ -14,6 +14,7 @@
 | AI能力 | Ollama（本地）/ DeepSeek（云端，可切换） |
 | 邮件 | Spring Mail（163 SMTP） |
 | 操作日志 | Spring AOP 自动记录（仅记录增删改） |
+| 文件存储 | 本地磁盘（WBS附件） |
 
 ## 快速开始
 
@@ -29,7 +30,6 @@ mysql -u root -p < sql/schema.sql
 
 ```bash
 cd backend
-# 修改 application.yml 中的数据库连接、邮箱、AI配置
 mvn spring-boot:run
 ```
 
@@ -49,14 +49,14 @@ npm run dev
 
 ```
 projectManager/
-├── sql/schema.sql                    # 12张表 + 初始数据
+├── sql/schema.sql                    # 15张表 + 初始数据
 ├── backend/                          # Spring Boot 后端
 │   ├── pom.xml
 │   └── src/main/java/com/pm/
-│       ├── config/                   # Security, MyBatis-Plus, AOP操作日志, CORS
-│       ├── controller/               # 13个REST控制器
+│       ├── config/                   # Security, MyBatis-Plus, AOP, CORS
+│       ├── controller/               # 14个REST控制器
 │       ├── service/                  # 业务接口 + 实现
-│       ├── mapper/                   # MyBatis-Plus Mapper
+│       ├── mapper/                   # MyBatis-Plus Mapper (13个)
 │       ├── model/                    # entity/dto/vo/enums
 │       ├── common/                   # 响应/异常/常量
 │       ├── security/                 # JWT认证
@@ -67,6 +67,7 @@ projectManager/
 │       ├── router/                   # 路由(含权限守卫)
 │       ├── store/                    # Pinia状态管理
 │       ├── layouts/                  # 主布局(侧边栏/顶栏)
+│       ├── utils/                    # 工具(Tooltip配置)
 │       └── views/
 │           ├── auth/                 # 登录 / 忘记密码
 │           ├── dashboard/            # 首页概览
@@ -74,6 +75,7 @@ projectManager/
 │           ├── todo/                 # 项目待办
 │           ├── ai-suggestion/        # AI风险建议
 │           ├── report/               # 周报(AI生成)
+│           ├── schedule/             # 定时任务管理
 │           ├── config/               # 系统配置
 │           ├── user/                 # 用户管理
 │           ├── role/                 # 角色管理(权限+数据权限)
@@ -82,7 +84,7 @@ projectManager/
 └── README.md
 ```
 
-## 数据库表结构（12张表）
+## 数据库表结构（15张表）
 
 | 表名 | 说明 |
 |---|---|
@@ -91,7 +93,7 @@ projectManager/
 | sys_permission | 权限表（菜单+按钮） |
 | sys_role_permission | 角色权限关联 |
 | sys_role_project | 角色数据权限关联（项目级） |
-| project | 项目主表 |
+| project | 项目主表（含WBS文档字段） |
 | project_stage | 项目阶段（含人天/成本/进度） |
 | project_risk | 风险/问题表 |
 | project_todo | 待办事项表 |
@@ -100,6 +102,8 @@ projectManager/
 | system_config | 全局配置 |
 | email_digest_log | 邮件发送记录 |
 | operation_log | 操作日志 |
+| scheduled_task | 定时任务配置 |
+| scheduled_task_log | 定时任务执行记录 |
 
 ## API 接口
 
@@ -112,6 +116,8 @@ projectManager/
 | 角色 | GET/POST/PUT/DELETE /roles | 角色CRUD |
 | 权限 | GET /permissions/tree | 权限树 |
 | 项目 | GET/POST/PUT/DELETE /projects | 项目CRUD（含查询过滤） |
+| 项目 | PUT /projects/{id}/wbs-url | WBS在线链接更新 |
+| 项目 | POST/GET /projects/{id}/wbs-file | WBS附件上传/下载 |
 | 阶段 | GET /projects/{id}/stages, PUT /stages/{id} | 阶段管理 |
 | 风险 | GET/POST/PUT /projects/{id}/risks, GET /risks/aggregated | 风险管理 |
 | 待办 | GET/POST/PUT/DELETE /todos | 待办CRUD（全局+项目级） |
@@ -122,12 +128,16 @@ projectManager/
 | 变更 | GET/POST /projects/{id}/changes | 变更记录 |
 | 报告 | GET /reports/weekly | AI周报 |
 | 日志 | GET /operation-logs | 操作日志 |
+| 定时任务 | GET /scheduled-tasks | 任务列表 |
+| 定时任务 | PUT /scheduled-tasks/{id}/toggle | 启用/禁用 |
+| 定时任务 | POST /scheduled-tasks/{id}/run | 手动执行 |
+| 定时任务 | GET /scheduled-tasks/logs | 执行记录 |
 
 ## 核心功能
 
 ### 项目管理
 - 项目编号唯一性校验，创建后自动初始化7个标准阶段
-- 预期结束日期、启动日期、结束日期（运维阶段开始日期）
+- 预期结束日期、WBS在线文档链接、WBS离线附件（拖拽上传/下载/覆盖替换）
 - 编辑时支持状态变更，选择「已完成」自动校验未完成阶段（排除运维）
 - 项目列表支持项目名称/编号/等级查询 + 分页
 
@@ -145,14 +155,14 @@ projectManager/
 
 ### 项目待办
 - 待办编号自动生成（项目编号-TD-日期-序号）
-- 所属阶段、来源、优先级、紧急程度、负责人、进度、阻塞问题、风险说明、输出物
+- 所属阶段、来源、优先级、紧急程度、负责人（支持手动输入）、进度、阻塞问题、风险说明、输出物
 - 逾期待办自动创建风险记录（定时任务每小时检查）
 - 全局待办页面 + 项目详情待办Tab
 
 ### AI能力
 - 隐性风险探测：阶段备注保存后异步调用AI分析
 - 每晚22:00自动全量扫描，手动扫描按钮（含原理说明弹窗）
-- 周报AI叙述性总结
+- 周报AI叙述性总结（含生成规则Tips说明）
 - 支持 Ollama（本地）/ DeepSeek（云端）切换
 
 ### 健康评分
@@ -161,10 +171,11 @@ projectManager/
 - 所有权重和阈值可配置
 
 ### 系统管理（部门经理）
-- 系统配置：健康权重/停滞阈值/邮件/AI
+- 系统配置：健康权重/停滞阈值/邮件测试发送/AI配置
 - 用户管理：CRUD + 邮箱手机号格式校验
 - 角色管理：CRUD + 页面/按钮权限分配 + 数据权限（项目级）
 - 操作日志：AOP自动记录增删改，按模块/类型过滤
+- 定时任务：任务列表/启用禁用/手动执行/执行记录
 
 ### 认证与权限
 - JWT无状态认证
@@ -188,6 +199,25 @@ projectManager/
 | 风险停滞刷新 | 每小时 | 自动标记停滞风险 |
 | 待办逾期刷新 | 每小时:15 | 逾期自动创建风险 |
 | AI风险扫描 | 每晚22:00 | 全量扫描阶段备注 |
+
+所有定时任务支持启用/禁用、手动执行，执行后自动记录日志。
+
+## 侧边栏导航
+
+```
+首页概览
+项目管理
+AI风险建议
+项目待办
+运营中心
+  ├─ 项目报告（AI周报）
+  └─ 定时任务
+系统管理（仅部门经理）
+  ├─ 系统配置
+  ├─ 用户管理
+  ├─ 角色管理
+  └─ 操作日志
+```
 
 ## 部署
 
