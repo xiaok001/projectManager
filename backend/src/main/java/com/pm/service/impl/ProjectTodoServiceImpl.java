@@ -91,6 +91,7 @@ public class ProjectTodoServiceImpl extends ServiceImpl<ProjectTodoMapper, Proje
         todo.setPriority(dto.getPriority());
         todo.setUrgency(dto.getUrgency());
         todo.setOwnerId(dto.getOwnerId());
+        todo.setOwnerName(dto.getOwnerName());
         todo.setPlanStart(dto.getPlanStart());
         todo.setPlanEnd(dto.getPlanEnd());
         todo.setActualEnd(dto.getActualEnd());
@@ -102,6 +103,7 @@ public class ProjectTodoServiceImpl extends ServiceImpl<ProjectTodoMapper, Proje
         todo.setRemark(dto.getRemark());
         todo.setCreatedBy(operatorId);
         save(todo);
+        fillExtraNames(List.of(todo));
         return todo;
     }
 
@@ -117,6 +119,7 @@ public class ProjectTodoServiceImpl extends ServiceImpl<ProjectTodoMapper, Proje
         if (dto.getPriority() != null) todo.setPriority(dto.getPriority());
         if (dto.getUrgency() != null) todo.setUrgency(dto.getUrgency());
         if (dto.getOwnerId() != null) todo.setOwnerId(dto.getOwnerId());
+        if (dto.getOwnerName() != null) todo.setOwnerName(dto.getOwnerName());
         if (dto.getPlanStart() != null) todo.setPlanStart(dto.getPlanStart());
         if (dto.getPlanEnd() != null) todo.setPlanEnd(dto.getPlanEnd());
         if (dto.getActualEnd() != null) todo.setActualEnd(dto.getActualEnd());
@@ -139,6 +142,7 @@ public class ProjectTodoServiceImpl extends ServiceImpl<ProjectTodoMapper, Proje
         }
 
         updateById(todo);
+        fillExtraNames(List.of(todo));
         return todo;
     }
 
@@ -203,7 +207,9 @@ public class ProjectTodoServiceImpl extends ServiceImpl<ProjectTodoMapper, Proje
             Map<Long, String> nameMap = sysUserMapper.selectBatchIds(ownerIds).stream()
                     .collect(Collectors.toMap(SysUser::getId, SysUser::getRealName));
             list.forEach(t -> {
-                if (t.getOwnerId() != null) t.setOwnerName(nameMap.get(t.getOwnerId()));
+                if (t.getOwnerId() != null && t.getOwnerName() == null) {
+                    t.setOwnerName(nameMap.get(t.getOwnerId()));
+                }
             });
         }
         // 填充阶段名称
@@ -217,6 +223,19 @@ public class ProjectTodoServiceImpl extends ServiceImpl<ProjectTodoMapper, Proje
                     .collect(Collectors.toMap(ProjectStage::getId, ProjectStage::getStageName));
             list.forEach(t -> {
                 if (t.getStageId() != null) t.setStageName(stageMap.get(t.getStageId()));
+            });
+        }
+        // 填充项目编号
+        List<Long> projectIds = list.stream()
+                .map(ProjectTodo::getProjectId)
+                .filter(id -> id != null)
+                .distinct()
+                .collect(Collectors.toList());
+        if (!projectIds.isEmpty()) {
+            Map<Long, String> codeMap = projectMapper.selectBatchIds(projectIds).stream()
+                    .collect(Collectors.toMap(Project::getId, Project::getProjectCode));
+            list.forEach(t -> {
+                if (t.getProjectId() != null) t.setProjectCode(codeMap.get(t.getProjectId()));
             });
         }
     }

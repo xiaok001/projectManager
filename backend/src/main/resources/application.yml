@@ -1,5 +1,9 @@
 server:
   port: 8080
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 spring:
   application:
@@ -52,6 +56,10 @@ ai:
   ollama:
     base-url: http://192.168.4.161:11434
     model: qwen2.5:7b
+
+# 文件上传配置
+file:
+  upload-root: ./project-files
 
 logging:
   level:

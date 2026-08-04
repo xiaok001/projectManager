@@ -1,13 +1,13 @@
 package com.pm.schedule;
 
-import com.pm.service.AiRiskSuggestionService;
-import com.pm.service.ProjectRiskService;
-import com.pm.service.ProjectStageService;
-import com.pm.service.ProjectTodoService;
+import com.pm.model.entity.ScheduledTask;
+import com.pm.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -16,41 +16,78 @@ public class ScheduledTasks {
 
     private final ProjectStageService stageService;
     private final ProjectRiskService riskService;
-    private final AiRiskSuggestionService suggestionService;
     private final ProjectTodoService todoService;
+    private final AiRiskSuggestionService suggestionService;
+    private final ScheduledTaskService taskService;
 
     @Scheduled(cron = "0 0 * * * ?")
     public void refreshDelayedStages() {
-        log.info("定时任务: 刷新阶段延期状态");
-        stageService.refreshDelayedStatus();
+        executeAndLog("refreshDelayedStages", "阶段延期刷新", () -> {
+            stageService.refreshDelayedStatus();
+            return "阶段延期刷新完成";
+        });
     }
 
     @Scheduled(cron = "0 30 * * * ?")
     public void refreshStaleRisks() {
-        log.info("定时任务: 刷新风险停滞状态");
-        riskService.refreshStaleStatus();
+        executeAndLog("refreshStaleRisks", "风险停滞刷新", () -> {
+            riskService.refreshStaleStatus();
+            return "风险停滞刷新完成";
+        });
     }
 
-    /**
-     * 每小时刷新待办逾期状态，逾期自动创建风险
-     */
     @Scheduled(cron = "0 15 * * * ?")
     public void refreshOverdueTodos() {
-        log.info("定时任务: 刷新待办逾期状态");
-        todoService.refreshOverdueTodos();
+        executeAndLog("refreshOverdueTodos", "待办逾期刷新", () -> {
+            todoService.refreshOverdueTodos();
+            return "待办逾期刷新完成";
+        });
+    }
+
+    @Scheduled(cron = "0 0 22 * * ?")
+    public void nightlyAiRiskScan() {
+        executeAndLog("nightlyAiRiskScan", "AI风险扫描", () -> {
+            int count = suggestionService.scanAllProjectsForRisks();
+            return "AI风险扫描完成，发现 " + count + " 条新建议";
+        });
     }
 
     /**
-     * 每晚22:00自动扫描所有项目，AI识别潜在风险
+     * 统一执行+记录日志（先检查任务是否启用）
      */
-    @Scheduled(cron = "0 0 22 * * ?")
-    public void nightlyAiRiskScan() {
-        log.info("定时任务: 每晚AI风险扫描开始");
-        try {
-            int count = suggestionService.scanAllProjectsForRisks();
-            log.info("定时任务: AI风险扫描完成，发现 {} 条新建议", count);
-        } catch (Exception e) {
-            log.error("定时任务: AI风险扫描失败", e);
+    private void executeAndLog(String taskKey, String taskName, TaskAction action) {
+        // 检查任务是否启用
+        List<ScheduledTask> tasks = taskService.lambdaQuery()
+                .eq(ScheduledTask::getTaskKey, taskKey)
+                .list();
+        if (!tasks.isEmpty() && tasks.get(0).getStatus() != 1) {
+            log.info("定时任务已禁用，跳过: {}", taskName);
+            return;
         }
+
+        Long taskId = tasks.isEmpty() ? null : tasks.get(0).getId();
+        long start = System.currentTimeMillis();
+        String resultMsg;
+        String status;
+
+        try {
+            resultMsg = action.execute();
+            status = "成功";
+            log.info("定时任务执行成功: {}", taskName);
+        } catch (Exception e) {
+            resultMsg = "执行失败: " + e.getMessage();
+            status = "失败";
+            log.error("定时任务执行失败: {}", taskName, e);
+        }
+
+        long executionTime = System.currentTimeMillis() - start;
+        if (taskId != null) {
+            taskService.recordLog(taskId, taskName, "自动", status, resultMsg, executionTime);
+        }
+    }
+
+    @FunctionalInterface
+    interface TaskAction {
+        String execute() throws Exception;
     }
 }

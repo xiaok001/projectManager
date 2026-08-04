@@ -27,6 +27,8 @@ public class ProjectTodo {
     private String urgency;
     /** 责任人ID */
     private Long ownerId;
+    /** 负责人姓名(手动输入时使用) */
+    private String ownerName;
     private LocalDate planStart;
     private LocalDate planEnd;
     private LocalDate actualEnd;
@@ -48,8 +50,6 @@ public class ProjectTodo {
     private LocalDateTime updatedAt;
 
     // non-db fields
-    @TableField(exist = false)
-    private String ownerName;
     @TableField(exist = false)
     private String stageName;
     @TableField(exist = false)

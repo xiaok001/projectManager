@@ -17,6 +17,7 @@ public class TodoDTO {
     private String priority = "中";
     private String urgency = "普通";
     private Long ownerId;
+    private String ownerName;
     private LocalDate planStart;
     private LocalDate planEnd;
     private LocalDate actualEnd;

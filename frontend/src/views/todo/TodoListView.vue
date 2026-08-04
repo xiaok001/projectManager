@@ -138,7 +138,15 @@
           </el-col>
           <el-col :span="8">
             <el-form-item label="负责人">
-              <el-select v-model="form.ownerId" placeholder="选择" filterable clearable style="width:100%">
+              <el-select
+                v-model="selectedOwner"
+                placeholder="选择或输入负责人"
+                filterable
+                allow-create
+                default-first-option
+                clearable
+                style="width:100%"
+              >
                 <el-option v-for="u in users" :key="u.id" :value="u.id" :label="u.realName" />
               </el-select>
             </el-form-item>
@@ -215,9 +223,12 @@ const searchForm = reactive({ projectId: undefined as number | undefined, status
 
 const form = reactive<any>({
   projectId: null, stageId: null, title: '', source: '', priority: '中', urgency: '普通',
-  ownerId: null, planStart: '', planEnd: '', status: '待处理', progress: 0,
+  ownerId: null, ownerName: '', planStart: '', planEnd: '', status: '待处理', progress: 0,
   blockIssue: '', riskDesc: '', outputDesc: '', remark: '',
 })
+
+// 负责人选择器（兼容数字ID和手动输入的字符串）
+const selectedOwner = ref<number | string | null>(null)
 
 // 可选项目：排除已结束(非运维阶段的项目不可选，但如果选了已结束项目，阶段下拉排除运维)
 const availableProjects = computed(() => projects.value)
@@ -228,13 +239,9 @@ const selectedProjectStatus = computed(() => {
   return p?.status || ''
 })
 
-// 可选阶段：如果项目已结束，排除运维阶段
+// 可选阶段：返回该项目的所有阶段
 const availableStages = computed(() => {
-  const stages = allStages.value.filter((s: any) => s.projectId === form.projectId)
-  if (selectedProjectStatus.value === '已完成') {
-    return stages.filter((s: any) => s.stageName !== '运维')
-  }
-  return stages
+  return allStages.value.filter((s: any) => s.projectId === form.projectId)
 })
 
 function statusType(s: string) {
@@ -280,18 +287,21 @@ function handleReset() {
 function openDialog(row: any) {
   if (row) {
     editingId.value = row.id
+    // 设置 selectedOwner：优先用 ownerId，没有则用 ownerName
+    selectedOwner.value = row.ownerId || row.ownerName || null
     Object.assign(form, {
       projectId: row.projectId, stageId: row.stageId, title: row.title, source: row.source || '',
-      priority: row.priority || '中', urgency: row.urgency || '普通', ownerId: row.ownerId,
+      priority: row.priority || '中', urgency: row.urgency || '普通', ownerId: row.ownerId, ownerName: row.ownerName || '',
       planStart: row.planStart, planEnd: row.planEnd, status: row.status || '待处理',
       progress: row.progress || 0, blockIssue: row.blockIssue || '', riskDesc: row.riskDesc || '',
       outputDesc: row.outputDesc || '', remark: row.remark || '',
     })
   } else {
     editingId.value = null
+    selectedOwner.value = null
     Object.assign(form, {
       projectId: null, stageId: null, title: '', source: '', priority: '中', urgency: '普通',
-      ownerId: null, planStart: '', planEnd: '', status: '待处理', progress: 0,
+      ownerId: null, ownerName: '', planStart: '', planEnd: '', status: '待处理', progress: 0,
       blockIssue: '', riskDesc: '', outputDesc: '', remark: '',
     })
   }
@@ -301,6 +311,21 @@ function openDialog(row: any) {
 async function handleSubmit() {
   if (!form.projectId) { ElMessage.warning('请选择项目'); return }
   if (!form.title) { ElMessage.warning('请输入待办事项'); return }
+
+  // 解析负责人：数字=用户ID，字符串=手动输入的姓名
+  if (selectedOwner.value !== null && selectedOwner.value !== undefined) {
+    if (typeof selectedOwner.value === 'number') {
+      form.ownerId = selectedOwner.value
+      form.ownerName = null
+    } else {
+      form.ownerId = null
+      form.ownerName = String(selectedOwner.value)
+    }
+  } else {
+    form.ownerId = null
+    form.ownerName = null
+  }
+
   submitting.value = true
   try {
     if (isEdit.value) {

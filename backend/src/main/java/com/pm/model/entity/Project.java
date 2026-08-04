@@ -29,6 +29,10 @@ public class Project {
     private LocalDate startDate;
     /** 预期结束日期 */
     private LocalDate expectedEndDate;
+    /** WBS在线文档链接 */
+    private String wbsOnlineUrl;
+    /** WBS离线附件路径 */
+    private String wbsOfflineFile;
     /** 当前阶段 */
     private String currentStage;
     /** 项目状态: 进行中/已完成/已暂停 */

@@ -31,6 +31,125 @@
       </el-descriptions>
     </el-card>
 
+    <!-- WBS 文档区 -->
+    <el-card shadow="never" style="margin-top:12px">
+      <template #header>
+        <div class="section-header">
+          <el-icon><Document /></el-icon>
+          <span>WBS 文档</span>
+        </div>
+      </template>
+
+      <el-row :gutter="20">
+        <!-- 左栏：WBS 在线文档 -->
+        <el-col :span="12">
+          <div class="wbs-block">
+            <div class="wbs-block-title">
+              <el-icon><Link /></el-icon>
+              <span>WBS 在线文档</span>
+            </div>
+
+            <!-- 展示态 -->
+            <div v-if="!editingWbsUrl" class="wbs-block-body">
+              <template v-if="project.wbsOnlineUrl">
+                <a :href="project.wbsOnlineUrl" target="_blank" rel="noopener" class="wbs-url-link">
+                  <el-icon><Link /></el-icon>
+                  <span class="wbs-url-text">{{ project.wbsOnlineUrl }}</span>
+                  <el-icon class="wbs-url-open"><TopRight /></el-icon>
+                </a>
+                <el-button type="primary" link size="small" class="wbs-edit-btn" @click="startEditWbsUrl">
+                  <el-icon><Edit /></el-icon> 编辑
+                </el-button>
+              </template>
+              <template v-else>
+                <div class="wbs-empty">
+                  <el-icon :size="20"><Link /></el-icon>
+                  <span>暂未配置在线文档链接</span>
+                </div>
+                <el-button type="primary" link size="small" class="wbs-edit-btn" @click="startEditWbsUrl">
+                  <el-icon><Plus /></el-icon> 添加链接
+                </el-button>
+              </template>
+            </div>
+
+            <!-- 编辑态 -->
+            <div v-else class="wbs-block-body">
+              <el-input
+                v-model="wbsUrlInput"
+                placeholder="https://docs.example.com/wbs/..."
+                clearable
+                :prefix-icon="Link"
+                size="default"
+              />
+              <div class="wbs-edit-actions">
+                <el-button type="primary" size="small" :loading="savingWbsUrl" @click="saveWbsUrl">保存</el-button>
+                <el-button size="small" @click="editingWbsUrl = false">取消</el-button>
+              </div>
+            </div>
+          </div>
+        </el-col>
+
+        <!-- 右栏：WBS 离线附件 -->
+        <el-col :span="12">
+          <div class="wbs-block">
+            <div class="wbs-block-title">
+              <el-icon><FolderOpened /></el-icon>
+              <span>WBS 离线附件</span>
+            </div>
+
+            <div class="wbs-block-body">
+              <!-- 已有文件 -->
+              <div v-if="project.wbsOfflineFile" class="wbs-file-card">
+                <div class="wbs-file-info">
+                  <div class="wbs-file-icon">
+                    <el-icon :size="24"><Document /></el-icon>
+                  </div>
+                  <div class="wbs-file-meta">
+                    <span class="wbs-file-name">{{ getFileName(project.wbsOfflineFile) }}</span>
+                    <span class="wbs-file-hint">点击下载或重新上传替换</span>
+                  </div>
+                </div>
+                <div class="wbs-file-actions">
+                  <el-button type="primary" link size="small" @click="downloadWbsFile">
+                    <el-icon><Download /></el-icon> 下载
+                  </el-button>
+                  <el-divider direction="vertical" />
+                  <el-upload
+                    :show-file-list="false"
+                    :before-upload="uploadWbsFile"
+                    :http-request="() => {}"
+                    accept=".doc,.docx,.xls,.xlsx,.pdf,.mpp,.zip,.rar"
+                    style="display:inline"
+                  >
+                    <el-button type="warning" link size="small" :loading="uploadingFile">
+                      <el-icon><Upload /></el-icon> 重新上传
+                    </el-button>
+                  </el-upload>
+                </div>
+              </div>
+
+              <!-- 无文件 - 拖拽上传 -->
+              <el-upload
+                v-else
+                drag
+                :show-file-list="false"
+                :before-upload="uploadWbsFile"
+                :http-request="() => {}"
+                accept=".doc,.docx,.xls,.xlsx,.pdf,.mpp,.zip,.rar"
+                class="wbs-drag-upload"
+              >
+                <div class="wbs-upload-inner">
+                  <el-icon :size="32" class="wbs-upload-icon"><UploadFilled /></el-icon>
+                  <div class="wbs-upload-text">将文件拖拽至此，或<em>点击上传</em></div>
+                  <div class="wbs-upload-hint">支持 .doc .xls .pdf .mpp .zip 等格式</div>
+                </div>
+              </el-upload>
+            </div>
+          </div>
+        </el-col>
+      </el-row>
+    </el-card>
+
     <!-- Tab 区域 -->
     <el-card shadow="never" style="margin-top:16px">
       <el-tabs v-model="activeTab">
@@ -414,7 +533,7 @@
           </el-col>
           <el-col :span="8">
             <el-form-item label="负责人">
-              <el-select v-model="todoForm.ownerId" placeholder="选择" filterable clearable style="width:100%">
+              <el-select v-model="todoSelectedOwner" placeholder="选择或输入负责人" filterable allow-create default-first-option clearable style="width:100%">
                 <el-option v-for="u in users" :key="u.id" :value="u.id" :label="u.realName" />
               </el-select>
             </el-form-item>
@@ -472,7 +591,9 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Link } from '@element-plus/icons-vue'
 import { projectApi, stageApi, riskApi, changeLogApi, todoApi, authApi } from '../../api'
+import api from '../../api'
 
 const route = useRoute()
 const router = useRouter()
@@ -521,13 +642,20 @@ const todos = ref<any[]>([])
 const users = ref<any[]>([])
 const todoDialogVisible = ref(false)
 const savingTodo = ref(false)
+const todoSelectedOwner = ref<number | string | null>(null)
 const todoForm = reactive<any>({
   id: 0, title: '', stageId: null, source: '', priority: '中', urgency: '普通',
-  ownerId: null, planStart: '', planEnd: '', status: '待处理', progress: 0,
+  ownerId: null, ownerName: '', planStart: '', planEnd: '', status: '待处理', progress: 0,
   blockIssue: '', riskDesc: '', outputDesc: '', remark: '',
 })
 
 const activeTab = ref((route.query.tab as string) || 'stages')
+
+// --- WBS文档 ---
+const editingWbsUrl = ref(false)
+const wbsUrlInput = ref('')
+const savingWbsUrl = ref(false)
+const uploadingFile = ref(false)
 
 // --- Helpers ---
 const levelTagType = (level: number) => ({ 0: 'danger', 1: 'warning', 2: 'info' }[level] ?? 'info')
@@ -673,17 +801,19 @@ function todoStatusType(status: string) {
 
 function openTodoDialog(row: any) {
   if (row) {
+    todoSelectedOwner.value = row.ownerId || row.ownerName || null
     Object.assign(todoForm, {
       id: row.id, title: row.title, stageId: row.stageId, source: row.source || '',
-      priority: row.priority || '中', urgency: row.urgency || '普通', ownerId: row.ownerId,
+      priority: row.priority || '中', urgency: row.urgency || '普通', ownerId: row.ownerId, ownerName: row.ownerName || '',
       planStart: row.planStart, planEnd: row.planEnd, status: row.status || '待处理',
       progress: row.progress || 0, blockIssue: row.blockIssue || '', riskDesc: row.riskDesc || '',
       outputDesc: row.outputDesc || '', remark: row.remark || '',
     })
   } else {
+    todoSelectedOwner.value = null
     Object.assign(todoForm, {
       id: 0, title: '', stageId: null, source: '', priority: '中', urgency: '普通',
-      ownerId: null, planStart: '', planEnd: '', status: '待处理', progress: 0,
+      ownerId: null, ownerName: '', planStart: '', planEnd: '', status: '待处理', progress: 0,
       blockIssue: '', riskDesc: '', outputDesc: '', remark: '',
     })
   }
@@ -692,6 +822,21 @@ function openTodoDialog(row: any) {
 
 async function saveTodo() {
   if (!todoForm.title) { ElMessage.warning('请输入待办事项'); return }
+
+  // 解析负责人
+  if (todoSelectedOwner.value !== null && todoSelectedOwner.value !== undefined) {
+    if (typeof todoSelectedOwner.value === 'number') {
+      todoForm.ownerId = todoSelectedOwner.value
+      todoForm.ownerName = null
+    } else {
+      todoForm.ownerId = null
+      todoForm.ownerName = String(todoSelectedOwner.value)
+    }
+  } else {
+    todoForm.ownerId = null
+    todoForm.ownerName = null
+  }
+
   savingTodo.value = true
   try {
     if (todoForm.id) {
@@ -712,6 +857,51 @@ async function handleDeleteTodo(id: number) {
     ElMessage.success('待办已删除')
     await fetchAll()
   } catch { /* handled */ }
+}
+
+// --- WBS操作 ---
+function getFileName(path: string) {
+  return path ? path.split('/').pop() || path : ''
+}
+
+function startEditWbsUrl() {
+  wbsUrlInput.value = project.value.wbsOnlineUrl || ''
+  editingWbsUrl.value = true
+}
+
+async function saveWbsUrl() {
+  const val = (wbsUrlInput.value || '').trim()
+  if (val && !/^https?:\/\/.+/.test(val)) {
+    ElMessage.warning('请输入正确的链接格式（以 http:// 或 https:// 开头）')
+    return
+  }
+  savingWbsUrl.value = true
+  try {
+    await api.put(`/projects/${projectId}/wbs-url`, { wbsOnlineUrl: val })
+    project.value.wbsOnlineUrl = val || null
+    editingWbsUrl.value = false
+    ElMessage.success(val ? 'WBS在线链接已保存' : 'WBS在线链接已清空')
+  } catch { /* handled */ }
+  savingWbsUrl.value = false
+}
+
+async function uploadWbsFile(file: File) {
+  uploadingFile.value = true
+  const formData = new FormData()
+  formData.append('file', file)
+  try {
+    const res: any = await api.post(`/projects/${projectId}/wbs-file`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    project.value.wbsOfflineFile = res.data.path
+    ElMessage.success('附件上传成功')
+  } catch { /* handled */ }
+  uploadingFile.value = false
+  return false
+}
+
+async function downloadWbsFile() {
+  window.open(`/api/v1/projects/${projectId}/wbs-file`, '_blank')
 }
 
 onMounted(() => { fetchAll() })
@@ -751,4 +941,176 @@ onMounted(() => { fetchAll() })
 .diff-value.old { background: #fef0f0; color: #f56c6c; text-decoration: line-through; }
 .diff-value.new { background: #f0f9eb; color: #67c23a; font-weight: 500; }
 .diff-arrow { color: #c0c4cc; font-size: 18px; flex-shrink: 0; }
+
+/* WBS文档区 */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.section-header .el-icon { color: #409eff; }
+
+.wbs-block {
+  background: #f8f9fb;
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  padding: 20px;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+}
+
+.wbs-block-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #303133;
+  margin-bottom: 16px;
+}
+.wbs-block-title .el-icon { color: #909399; }
+
+.wbs-block-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* 在线链接 - 展示态 */
+.wbs-url-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid #e4e7ed;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #409eff;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+.wbs-url-link:hover {
+  border-color: #409eff;
+  background: #f0f5ff;
+}
+.wbs-url-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wbs-url-open {
+  color: #c0c4cc;
+  flex-shrink: 0;
+}
+.wbs-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  color: #c0c4cc;
+  font-size: 13px;
+}
+.wbs-edit-btn {
+  margin-top: 10px;
+  align-self: flex-start;
+}
+
+/* 在线链接 - 编辑态 */
+.wbs-edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* 离线附件 - 已有文件 */
+.wbs-file-card {
+  background: #fff;
+  border: 1px solid #e4e7ed;
+  border-radius: 6px;
+  padding: 16px;
+  transition: border-color 0.2s;
+}
+.wbs-file-card:hover { border-color: #c0c4cc; }
+.wbs-file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.wbs-file-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ecf5ff;
+  border-radius: 8px;
+  color: #409eff;
+}
+.wbs-file-meta { flex: 1; }
+.wbs-file-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #303133;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wbs-file-hint {
+  display: block;
+  font-size: 12px;
+  color: #909399;
+  margin-top: 2px;
+}
+.wbs-file-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* 离线附件 - 拖拽上传 */
+.wbs-drag-upload { width: 100%; }
+.wbs-drag-upload :deep(.el-upload) { width: 100%; }
+.wbs-drag-upload :deep(.el-upload-dragger) {
+  width: 100%;
+  padding: 28px 20px;
+  border-radius: 8px;
+  border: 1px dashed #d9d9d9;
+  background: #fafafa;
+  transition: border-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wbs-drag-upload :deep(.el-upload-dragger:hover) {
+  border-color: #409eff;
+}
+.wbs-upload-inner { text-align: center; }
+.wbs-upload-icon { color: #c0c4cc; margin-bottom: 8px; }
+.wbs-upload-text {
+  font-size: 13px;
+  color: #606266;
+  line-height: 1.6;
+}
+.wbs-upload-text em {
+  font-style: normal;
+  color: #409eff;
+}
+.wbs-upload-hint {
+  font-size: 12px;
+  color: #c0c4cc;
+  margin-top: 4px;
+}
 </style>

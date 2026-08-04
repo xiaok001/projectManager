@@ -30,10 +30,20 @@
           <el-icon><Finished /></el-icon>
           <template #title>项目待办</template>
         </el-menu-item>
-        <el-menu-item index="/reports">
-          <el-icon><Document /></el-icon>
-          <template #title>报告</template>
-        </el-menu-item>
+        <el-sub-menu index="operation">
+          <template #title>
+            <el-icon><DataAnalysis /></el-icon>
+            <span>运营中心</span>
+          </template>
+          <el-menu-item index="/reports">
+            <el-icon><Document /></el-icon>
+            <template #title>项目报告</template>
+          </el-menu-item>
+          <el-menu-item index="/schedule">
+            <el-icon><Timer /></el-icon>
+            <template #title>定时任务</template>
+          </el-menu-item>
+        </el-sub-menu>
         <el-sub-menu v-if="userStore.isDeptManager" index="system">
           <template #title>
             <el-icon><Setting /></el-icon>

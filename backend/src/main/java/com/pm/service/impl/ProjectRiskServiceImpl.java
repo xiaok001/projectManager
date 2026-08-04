@@ -70,6 +70,7 @@ public class ProjectRiskServiceImpl extends ServiceImpl<ProjectRiskMapper, Proje
         if (dto.getDescription() != null) risk.setDescription(dto.getDescription());
         if (dto.getType() != null) risk.setType(dto.getType());
         if (dto.getSeverity() != null) risk.setSeverity(dto.getSeverity());
+        if (dto.getStatus() != null) risk.setStatus(dto.getStatus());
         if (dto.getOwnerId() != null) risk.setOwnerId(dto.getOwnerId());
         if (dto.getActionPlan() != null) risk.setActionPlan(dto.getActionPlan());
         risk.setLastUpdatedAt(LocalDateTime.now());

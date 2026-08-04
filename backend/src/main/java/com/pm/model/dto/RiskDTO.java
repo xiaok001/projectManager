@@ -8,6 +8,8 @@ import lombok.Data;
  */
 @Data
 public class RiskDTO {
+    private Long id;
+
     @NotBlank(message = "描述不能为空")
     private String description;
 
@@ -15,6 +17,8 @@ public class RiskDTO {
     private String type;
 
     private String severity = "中";
+    private String status;
     private Long ownerId;
+    private String owner;
     private String actionPlan;
 }

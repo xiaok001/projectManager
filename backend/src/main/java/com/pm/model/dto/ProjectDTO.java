@@ -32,5 +32,7 @@ public class ProjectDTO {
 
     private LocalDate expectedEndDate;
 
+    private String wbsOnlineUrl;
+
     private String status;
 }

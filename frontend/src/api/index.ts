@@ -180,4 +180,13 @@ export const reportApi = {
     api.get('/reports/weekly', { params: projectId ? { projectId } : {} }),
 }
 
+// ============ 定时任务接口 ============
+export const scheduledTaskApi = {
+  list: () => api.get('/scheduled-tasks'),
+  toggle: (id: number) => api.put(`/scheduled-tasks/${id}/toggle`),
+  run: (id: number) => api.post(`/scheduled-tasks/${id}/run`),
+  logs: (params: { pageNum?: number; pageSize?: number; taskId?: number }) =>
+    api.get('/scheduled-tasks/logs', { params }),
+}
+
 export default api

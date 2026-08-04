@@ -92,6 +92,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/log/OperationLogView.vue'),
         meta: { title: '操作日志', icon: 'Notebook', roles: ['DEPT_MANAGER'] },
       },
+      {
+        path: 'schedule',
+        name: 'ScheduledTask',
+        component: () => import('../views/schedule/ScheduledTaskView.vue'),
+        meta: { title: '定时任务', icon: 'Timer', roles: ['DEPT_MANAGER'] },
+      },
     ],
   },
   // 404 页面（放在最后，匹配所有未命中的路由）

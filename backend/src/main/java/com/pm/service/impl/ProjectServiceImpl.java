@@ -56,6 +56,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         project.setPmId(dto.getPmId());
         project.setStartDate(dto.getStartDate());
         project.setExpectedEndDate(dto.getExpectedEndDate());
+        project.setWbsOnlineUrl(dto.getWbsOnlineUrl());
         project.setStatus(Constants.STATUS_ACTIVE);
         save(project);
 
@@ -86,6 +87,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         project.setPmId(dto.getPmId());
         project.setStartDate(dto.getStartDate());
         project.setExpectedEndDate(dto.getExpectedEndDate());
+        if (dto.getWbsOnlineUrl() != null) project.setWbsOnlineUrl(dto.getWbsOnlineUrl());
 
         // 状态变更校验：如果要改为"已完成"，检查是否有未完成的阶段
         if (dto.getStatus() != null && "已完成".equals(dto.getStatus())

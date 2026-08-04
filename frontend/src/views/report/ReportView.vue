@@ -2,7 +2,7 @@
   <div class="page-container">
     <div class="page-header">
       <h2>项目周报</h2>
-      <div style="display:flex;gap:12px">
+      <div style="display:flex;align-items:center;gap:12px">
         <el-select v-model="selectedProject" placeholder="全部项目" clearable filterable style="width:220px">
           <el-option label="全部项目" :value="undefined" />
           <el-option v-for="p in projects" :key="p.id" :value="p.id" :label="p.name" />
@@ -10,6 +10,32 @@
         <el-button type="primary" :loading="loading" @click="generateReport">
           <el-icon><Document /></el-icon> 生成周报
         </el-button>
+        <el-tooltip :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" placement="bottom-end">
+          <template #content>
+            <div style="width:380px;white-space:pre-wrap;line-height:1.7">
+<b>周报生成规则：</b>
+
+<b>1. 报告周期</b>
+以本周一至周日为区间自动计算。
+
+<b>2. 数据来源</b>
+- 本周完成的阶段（实际完成日期在本周内，排除「运维」阶段）
+- 本周新增的风险（创建时间在本周内）
+- 本周关闭的风险
+- 当前未关闭风险统计（高/中/低/停滞）
+- 下周计划节点（未来7天内到期的阶段，排除运维和已完成）
+- 待办事项统计（已完成/进行中/逾期）
+
+<b>3. 项目范围</b>
+- 选择「全部项目」：自动排除已结束的项目
+- 选择单个项目：若已结束会提示确认
+
+<b>4. AI 智能总结</b>
+将上述结构化数据发送给 AI 大模型，自动生成 3-5 句叙述性总结，突出本周重点成果、主要风险和下周关注点。AI 不可用时降级为纯数据展示。
+            </div>
+          </template>
+          <el-icon class="info-icon"><InfoFilled /></el-icon>
+        </el-tooltip>
       </div>
     </div>
 
@@ -138,6 +164,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { projectApi, reportApi } from '../../api'
+import { InfoFilled } from '@element-plus/icons-vue'
 
 const loading = ref(false)
 const projects = ref<any[]>([])
@@ -184,6 +211,13 @@ async function generateReport() {
   margin-bottom: 16px;
 }
 .page-header h2 { margin: 0; }
+.info-icon {
+  color: #909399;
+  cursor: pointer;
+  font-size: 18px;
+  transition: color 0.2s;
+}
+.info-icon:hover { color: #409eff; }
 .report-content { max-width: 1000px; }
 .report-header { text-align: center; margin-bottom: 24px; }
 .report-header h2 { font-size: 22px; margin: 0; }
