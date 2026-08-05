@@ -214,4 +214,29 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             throw new BusinessException("邮件发送失败，请稍后重试或联系管理员");
         }
     }
+
+    @Override
+    public void updateMyProfile(Long userId, String realName, String email, String phone) {
+        SysUser user = getById(userId);
+        if (user == null) throw new BusinessException("用户不存在");
+
+        if (realName != null && !realName.isBlank()) user.setRealName(realName.trim());
+        user.setEmail(email != null && !email.isBlank() ? email.trim() : null);
+        user.setPhone(phone != null && !phone.isBlank() ? phone.trim() : null);
+        updateById(user);
+        log.info("用户资料更新: userId={}", userId);
+    }
+
+    @Override
+    public void changePassword(Long userId, String oldPassword, String newPassword) {
+        SysUser user = getById(userId);
+        if (user == null) throw new BusinessException("用户不存在");
+
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new BusinessException("原密码错误");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        updateById(user);
+        log.info("密码修改成功: userId={}", userId);
+    }
 }

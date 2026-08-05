@@ -17,4 +17,6 @@ public interface SysUserService extends IService<SysUser> {
     void deleteUser(Long id);
     void verifyUsername(String username);
     void resetPassword(String username, String email);
+    void updateMyProfile(Long userId, String realName, String email, String phone);
+    void changePassword(Long userId, String oldPassword, String newPassword);
 }

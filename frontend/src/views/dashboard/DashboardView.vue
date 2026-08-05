@@ -113,9 +113,35 @@
           >
             <div class="health-card-content">
               <div class="project-name">{{ project.projectName }}</div>
-              <div :class="['health-score', getHealthColorClass(project.healthColor)]">
-                {{ project.healthScore }}
-              </div>
+              <el-popover placement="top" :width="260" trigger="hover">
+                <template #reference>
+                  <div :class="['health-score', getHealthColorClass(project.healthColor)]" style="cursor:help">
+                    {{ project.healthScore }}
+                  </div>
+                </template>
+                <div class="score-breakdown">
+                  <div class="score-breakdown-title">评分构成</div>
+                  <div class="score-row">
+                    <span class="score-label">时间维度 (35%)</span>
+                    <span class="score-val">{{ project.timeScore ?? '-' }}</span>
+                  </div>
+                  <div class="score-row">
+                    <span class="score-label">风险维度 (40%)</span>
+                    <span class="score-val">{{ project.riskScore ?? '-' }}</span>
+                  </div>
+                  <div class="score-row">
+                    <span class="score-label">交付维度 (25%)</span>
+                    <span class="score-val">{{ project.deliveryScore ?? '-' }}</span>
+                  </div>
+                  <div class="score-divider"></div>
+                  <div class="score-formula">
+                    = {{ project.timeScore }}×35% + {{ project.riskScore }}×40% + {{ project.deliveryScore }}×25%
+                  </div>
+                  <div class="score-result">
+                    = <strong>{{ project.healthScore }}</strong> 分
+                  </div>
+                </div>
+              </el-popover>
               <div class="health-label">健康评分</div>
               <div class="current-stage">
                 <el-tag size="small">{{ project.currentStage || '暂无阶段' }}</el-tag>
@@ -398,5 +424,36 @@ onMounted(() => {
 .risk-badge.safe {
   color: #67c23a;
   background: #f0f9eb;
+}
+
+/* 评分明细弹窗 */
+.score-breakdown { font-size: 13px; }
+.score-breakdown-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #303133;
+  margin-bottom: 10px;
+}
+.score-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+.score-label { color: #606266; }
+.score-val { font-weight: 600; color: #303133; }
+.score-divider {
+  height: 1px;
+  background: #e4e7ed;
+  margin: 8px 0;
+}
+.score-formula {
+  font-size: 12px;
+  color: #909399;
+  font-family: 'Courier New', monospace;
+}
+.score-result {
+  margin-top: 4px;
+  font-size: 15px;
+  color: #303133;
 }
 </style>
