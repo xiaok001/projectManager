@@ -145,6 +145,9 @@ public class DynamicScheduler {
             case "dailyTodoAndRiskDigest":
                 emailDigestService.sendDailyTodoAndRiskDigest();
                 return "项目待办与风险日报发送完成";
+            case "dailyDigest":
+                emailDigestService.sendDailyDigest();
+                return "每日项目管理摘要发送完成";
             default:
                 throw new RuntimeException("未知任务: " + taskKey);
         }

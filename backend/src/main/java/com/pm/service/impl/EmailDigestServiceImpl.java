@@ -6,6 +6,7 @@ import com.pm.mapper.EmailDigestLogMapper;
 import com.pm.model.entity.EmailDigestLog;
 import com.pm.model.entity.Project;
 import com.pm.model.entity.ProjectRisk;
+import com.pm.model.entity.ProjectStage;
 import com.pm.model.entity.ProjectTodo;
 import com.pm.model.vo.DashboardVO;
 import com.pm.service.*;
@@ -13,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -35,9 +35,9 @@ public class EmailDigestServiceImpl extends ServiceImpl<EmailDigestLogMapper, Em
     private final ProjectService projectService;
     private final ProjectRiskService riskService;
     private final ProjectTodoService todoService;
+    private final ProjectStageService stageService;
 
     @Override
-    @Scheduled(cron = "0 30 9 * * ?")
     public void sendDailyDigest() {
         log.info("开始发送每日邮件摘要...");
 
@@ -159,10 +159,24 @@ public class EmailDigestServiceImpl extends ServiceImpl<EmailDigestLogMapper, Em
         logEntry.setRecipients(recipients);
 
         try {
-            List<Project> projects = projectService.lambdaQuery()
-                    .eq(Project::getStatus, "进行中")
+            List<Project> allProjects = projectService.lambdaQuery()
+                    .in(Project::getStatus, "进行中", "已完成")
                     .orderByAsc(Project::getProjectCode)
                     .list();
+
+            // 过滤：已结束的项目如果运维阶段也已完成，则排除
+            List<Project> projects = new java.util.ArrayList<>();
+            for (Project p : allProjects) {
+                if ("已完成".equals(p.getStatus())) {
+                    boolean opsCompleted = stageService.lambdaQuery()
+                            .eq(ProjectStage::getProjectId, p.getId())
+                            .eq(ProjectStage::getStageName, "运维")
+                            .eq(ProjectStage::getStatus, "已完成")
+                            .count() > 0;
+                    if (opsCompleted) continue;
+                }
+                projects.add(p);
+            }
 
             StringBuilder content = new StringBuilder();
             content.append("=== 项目待办与风险日报 ===\n");
