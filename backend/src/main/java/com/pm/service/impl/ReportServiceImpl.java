@@ -1,19 +1,26 @@
 package com.pm.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pm.common.constants.Constants;
+import com.pm.mapper.ReportWeeklyLogMapper;
+import com.pm.mapper.SysUserMapper;
 import com.pm.model.entity.*;
 import com.pm.model.vo.WeeklyReportVO;
 import com.pm.model.vo.WeeklyReportVO.*;
 import com.pm.service.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +33,9 @@ public class ReportServiceImpl implements ReportService {
     private final ProjectRiskService riskService;
     private final ProjectTodoService todoService;
     private final AiProvider aiProvider;
+    private final ReportWeeklyLogMapper reportLogMapper;
+    private final SysUserMapper sysUserMapper;
+    private final ObjectMapper objectMapper;
 
     @Override
     public WeeklyReportVO generateWeeklyReport(Long projectId, Long userId, String role) {
@@ -141,6 +151,20 @@ public class ReportServiceImpl implements ReportService {
         // AI生成叙述性总结
         report.setAiSummary(generateAiSummary(report));
 
+        // 保存历史记录
+        try {
+            ReportWeeklyLog logEntry = new ReportWeeklyLog();
+            logEntry.setProjectId(projectId);
+            logEntry.setProjectName(report.getProjectName());
+            logEntry.setPeriod(report.getPeriod());
+            logEntry.setAiSummary(report.getAiSummary());
+            logEntry.setReportContent(objectMapper.writeValueAsString(report));
+            logEntry.setCreatedBy(userId);
+            reportLogMapper.insert(logEntry);
+        } catch (Exception e) {
+            log.warn("周报历史保存失败: {}", e.getMessage());
+        }
+
         return report;
     }
 
@@ -208,5 +232,30 @@ public class ReportServiceImpl implements ReportService {
             log.warn("AI周报总结生成失败: {}", e.getMessage());
         }
         return null;
+    }
+
+    @Override
+    public Page<ReportWeeklyLog> getHistory(Integer pageNum, Integer pageSize, Long projectId) {
+        Page<ReportWeeklyLog> page = new Page<>(pageNum, pageSize);
+        LambdaQueryWrapper<ReportWeeklyLog> wrapper = new LambdaQueryWrapper<>();
+        if (projectId != null) {
+            wrapper.eq(ReportWeeklyLog::getProjectId, projectId);
+        }
+        wrapper.orderByDesc(ReportWeeklyLog::getCreatedAt);
+        Page<ReportWeeklyLog> result = reportLogMapper.selectPage(page, wrapper);
+        // 填充创建人姓名
+        List<Long> userIds = result.getRecords().stream()
+                .map(ReportWeeklyLog::getCreatedBy)
+                .filter(id -> id != null)
+                .distinct()
+                .collect(Collectors.toList());
+        if (!userIds.isEmpty()) {
+            Map<Long, String> nameMap = sysUserMapper.selectBatchIds(userIds).stream()
+                    .collect(Collectors.toMap(SysUser::getId, SysUser::getRealName));
+            result.getRecords().forEach(r -> {
+                if (r.getCreatedBy() != null) r.setCreatedByName(nameMap.get(r.getCreatedBy()));
+            });
+        }
+        return result;
     }
 }

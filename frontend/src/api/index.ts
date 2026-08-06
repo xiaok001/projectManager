@@ -179,6 +179,8 @@ export const operationLogApi = {
 export const reportApi = {
   weekly: (projectId?: number) =>
     api.get('/reports/weekly', { params: projectId ? { projectId } : {} }),
+  weeklyHistory: (params: { pageNum?: number; pageSize?: number; projectId?: number }) =>
+    api.get('/reports/weekly/history', { params }),
 }
 
 // ============ 定时任务接口 ============

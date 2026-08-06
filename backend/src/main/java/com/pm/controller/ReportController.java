@@ -1,6 +1,8 @@
 package com.pm.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pm.common.response.R;
+import com.pm.model.entity.ReportWeeklyLog;
 import com.pm.model.vo.WeeklyReportVO;
 import com.pm.service.ReportService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,5 +23,13 @@ public class ReportController {
         Long userId = (Long) request.getAttribute("userId");
         String role = (String) request.getAttribute("role");
         return R.ok(reportService.generateWeeklyReport(projectId, userId, role));
+    }
+
+    @GetMapping("/weekly/history")
+    public R<Page<ReportWeeklyLog>> weeklyHistory(
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) Long projectId) {
+        return R.ok(reportService.getHistory(pageNum, pageSize, projectId));
     }
 }

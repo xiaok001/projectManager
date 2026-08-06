@@ -157,6 +157,33 @@
         </div>
       </div>
     </el-card>
+
+    <!-- 历史记录 -->
+    <el-card shadow="never" style="margin-top:12px">
+      <template #header>
+        <div class="card-header">
+          <span><el-icon><Clock /></el-icon> 历史记录</span>
+          <el-select v-model="historyProjectId" placeholder="全部项目" clearable filterable style="width:200px" @change="loadHistory">
+            <el-option label="全部项目" :value="undefined" />
+            <el-option v-for="p in projects" :key="p.id" :value="p.id" :label="p.name" />
+          </el-select>
+        </div>
+      </template>
+      <el-table :data="historyList" v-loading="historyLoading" stripe border size="small">
+        <el-table-column prop="period" label="报告周期" width="140" />
+        <el-table-column prop="projectName" label="项目" width="160">
+          <template #default="{ row }">{{ row.projectName || '全部项目' }}</template>
+        </el-table-column>
+        <el-table-column prop="aiSummary" label="AI摘要" min-width="300" show-overflow-tooltip />
+        <el-table-column prop="createdByName" label="生成人" width="100" />
+        <el-table-column prop="createdAt" label="生成时间" width="170" />
+      </el-table>
+      <div class="pagination-wrap">
+        <el-pagination v-model:current-page="historyPageNum" v-model:page-size="historyPageSize"
+          :total="historyTotal" :page-sizes="[10,20,50]" layout="total, sizes, prev, pager, next, jumper"
+          background @size-change="loadHistory" @current-change="loadHistory" />
+      </div>
+    </el-card>
   </div>
 </template>
 
@@ -164,18 +191,27 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { projectApi, reportApi } from '../../api'
-import { InfoFilled } from '@element-plus/icons-vue'
+import { InfoFilled, Clock } from '@element-plus/icons-vue'
 
 const loading = ref(false)
 const projects = ref<any[]>([])
 const selectedProject = ref<number | undefined>()
 const report = ref<any>(null)
 
+// 历史记录
+const historyLoading = ref(false)
+const historyList = ref<any[]>([])
+const historyProjectId = ref<number | undefined>()
+const historyPageNum = ref(1)
+const historyPageSize = ref(10)
+const historyTotal = ref(0)
+
 onMounted(async () => {
   try {
     const res: any = await projectApi.list()
     projects.value = res.data || []
   } catch { /* ignore */ }
+  loadHistory()
 })
 
 async function generateReport() {
@@ -200,6 +236,18 @@ async function generateReport() {
     ElMessage.success('周报生成完成')
   } catch { /* handled */ }
   loading.value = false
+}
+
+async function loadHistory() {
+  historyLoading.value = true
+  try {
+    const params: any = { pageNum: historyPageNum.value, pageSize: historyPageSize.value }
+    if (historyProjectId.value) params.projectId = historyProjectId.value
+    const res: any = await reportApi.weeklyHistory(params)
+    historyList.value = res.data?.records || []
+    historyTotal.value = res.data?.total || 0
+  } catch { /* handled */ }
+  historyLoading.value = false
 }
 </script>
 
@@ -253,5 +301,10 @@ async function generateReport() {
 .report-section h3 {
   display: flex; align-items: center; gap: 6px;
   font-size: 16px; margin: 0 0 12px; color: #303133;
+}
+.pagination-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 </style>
