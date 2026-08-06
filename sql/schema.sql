@@ -278,6 +278,56 @@ CREATE TABLE IF NOT EXISTS sys_role_project (
     PRIMARY KEY (role_id, project_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色数据权限关联表';
 
+-- -----------------------------------------------------------
+-- 15. 定时任务配置表
+-- -----------------------------------------------------------
+CREATE TABLE IF NOT EXISTS scheduled_task (
+    id              BIGINT          NOT NULL AUTO_INCREMENT,
+    task_name       VARCHAR(100)    NOT NULL COMMENT '任务名称',
+    task_key        VARCHAR(100)    NOT NULL COMMENT '任务标识(方法名)',
+    cron_expr       VARCHAR(50)     NOT NULL COMMENT 'Cron表达式',
+    description     VARCHAR(500)    DEFAULT NULL COMMENT '任务说明',
+    status          TINYINT         DEFAULT 1 COMMENT '状态: 1启用 0禁用',
+    created_at      DATETIME        DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME        DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_task_key (task_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='定时任务配置表';
+
+-- -----------------------------------------------------------
+-- 16. 定时任务执行记录表
+-- -----------------------------------------------------------
+CREATE TABLE IF NOT EXISTS scheduled_task_log (
+    id              BIGINT          NOT NULL AUTO_INCREMENT,
+    task_id         BIGINT          NOT NULL COMMENT '关联任务ID',
+    task_name       VARCHAR(100)    NOT NULL COMMENT '任务名称(冗余)',
+    trigger_type    VARCHAR(20)     NOT NULL COMMENT '触发方式: 自动/手动',
+    status          VARCHAR(10)     NOT NULL COMMENT '执行状态: 成功/失败',
+    result_msg      TEXT            DEFAULT NULL COMMENT '执行结果/错误信息',
+    execution_time  BIGINT          DEFAULT NULL COMMENT '执行耗时(ms)',
+    executed_at     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '执行时间',
+    PRIMARY KEY (id),
+    KEY idx_task_id (task_id),
+    KEY idx_executed_at (executed_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='定时任务执行记录表';
+
+-- -----------------------------------------------------------
+-- 17. 周报历史记录表
+-- -----------------------------------------------------------
+CREATE TABLE IF NOT EXISTS report_weekly_log (
+    id              BIGINT          NOT NULL AUTO_INCREMENT,
+    project_id      BIGINT          DEFAULT NULL COMMENT '项目ID(NULL=全部项目)',
+    project_name    VARCHAR(200)    DEFAULT NULL COMMENT '项目名称(冗余)',
+    period          VARCHAR(50)     NOT NULL COMMENT '报告周期(如: 08.03 - 08.09)',
+    report_content  TEXT            NOT NULL COMMENT '报告内容(含结构化数据+AI总结)',
+    ai_summary      TEXT            DEFAULT NULL COMMENT 'AI叙述性总结',
+    created_by      BIGINT          DEFAULT NULL COMMENT '生成人',
+    created_at      DATETIME        DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_project_id (project_id),
+    KEY idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='周报历史记录表';
+
 -- ============================================================
 -- 初始数据
 -- ============================================================
@@ -350,3 +400,14 @@ SELECT 1, id FROM sys_permission;
 -- -----------------------------------------------------------
 INSERT INTO sys_user (username, password, real_name, email, role, role_id, status) VALUES
     ('admin', '$2b$10$eKmIwvnso7zSG3uCuUPirOmltxW4P.Co8w1bOd4vyeHmljeYYdTli', '系统管理员', 'admin@company.com', 'DEPT_MANAGER', 1, 1);
+
+-- -----------------------------------------------------------
+-- 定时任务初始数据
+-- -----------------------------------------------------------
+INSERT INTO scheduled_task (task_name, task_key, cron_expr, description) VALUES
+    ('阶段延期刷新',        'refreshDelayedStages',   '0 0 * * * ?',    '每小时检查项目阶段，自动标记已延期的阶段'),
+    ('风险停滞刷新',        'refreshStaleRisks',      '0 30 * * * ?',   '每小时检查风险，超过阈值天数未更新的自动标记停滞'),
+    ('待办逾期刷新',        'refreshOverdueTodos',     '0 15 * * * ?',   '每小时检查待办事项，逾期待办自动创建风险记录'),
+    ('AI风险扫描',          'nightlyAiRiskScan',       '0 0 22 * * ?',   '每晚22:00全量扫描项目阶段备注，AI识别潜在风险'),
+    ('项目待办与风险日报',   'dailyTodoAndRiskDigest',  '0 20 9 * * ?',   '每天9:20汇总所有项目的待办任务和风险内容，邮件发送'),
+    ('每日项目管理摘要',     'dailyDigest',             '0 30 9 * * ?',   '每天9:30汇总Dashboard数据，AI生成自然语言摘要后邮件发送');
