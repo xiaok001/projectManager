@@ -8,9 +8,10 @@ import com.pm.mapper.ScheduledTaskLogMapper;
 import com.pm.mapper.ScheduledTaskMapper;
 import com.pm.model.entity.ScheduledTask;
 import com.pm.model.entity.ScheduledTaskLog;
+import com.pm.schedule.DynamicScheduler;
 import com.pm.service.*;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,7 +19,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class ScheduledTaskServiceImpl extends ServiceImpl<ScheduledTaskMapper, ScheduledTask>
         implements ScheduledTaskService {
@@ -29,6 +29,23 @@ public class ScheduledTaskServiceImpl extends ServiceImpl<ScheduledTaskMapper, S
     private final ProjectTodoService todoService;
     private final AiRiskSuggestionService suggestionService;
     private final EmailDigestService emailDigestService;
+    private final DynamicScheduler dynamicScheduler;
+
+    public ScheduledTaskServiceImpl(ScheduledTaskLogMapper taskLogMapper,
+                                     ProjectStageService stageService,
+                                     ProjectRiskService riskService,
+                                     ProjectTodoService todoService,
+                                     AiRiskSuggestionService suggestionService,
+                                     EmailDigestService emailDigestService,
+                                     @Lazy DynamicScheduler dynamicScheduler) {
+        this.taskLogMapper = taskLogMapper;
+        this.stageService = stageService;
+        this.riskService = riskService;
+        this.todoService = todoService;
+        this.suggestionService = suggestionService;
+        this.emailDigestService = emailDigestService;
+        this.dynamicScheduler = dynamicScheduler;
+    }
 
     @Override
     public List<ScheduledTask> listAll() {
@@ -42,6 +59,7 @@ public class ScheduledTaskServiceImpl extends ServiceImpl<ScheduledTaskMapper, S
         if (task == null) throw new BusinessException("任务不存在");
         task.setStatus(task.getStatus() == 1 ? 0 : 1);
         updateById(task);
+        dynamicScheduler.refreshTask(id);
         log.info("定时任务状态切换: task={}, status={}", task.getTaskName(), task.getStatus());
     }
 
@@ -55,6 +73,7 @@ public class ScheduledTaskServiceImpl extends ServiceImpl<ScheduledTaskMapper, S
         if (task == null) throw new BusinessException("任务不存在");
         task.setCronExpr(cronExpr.trim());
         updateById(task);
+        dynamicScheduler.refreshTask(id);
         log.info("定时任务频率更新: task={}, cron={}", task.getTaskName(), cronExpr);
     }
 

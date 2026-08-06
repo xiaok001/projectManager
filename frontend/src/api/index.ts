@@ -60,6 +60,7 @@ export const authApi = {
   login: (data: { username: string; password: string }) =>
     api.post('/auth/login', data),
   getUsers: () => api.get('/auth/users'),
+  getPermissions: () => api.get('/auth/permissions'),
 }
 
 // ============ 项目接口 ============

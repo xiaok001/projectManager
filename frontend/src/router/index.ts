@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
+import { useUserStore } from '../store/user'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -119,16 +120,14 @@ const router = createRouter({
 })
 
 // 路由守卫
-router.beforeEach((to, _from, next) => {
-  // 动态标题：系统名称 + 页面名称
+router.beforeEach(async (to, _from, next) => {
+  // 动态标题
   const title = to.meta.title as string
   document.title = title ? `${title} - 多项目管理系统` : '多项目管理系统'
 
   const token = localStorage.getItem('token')
-  const userStr = localStorage.getItem('user')
-  const user = userStr ? JSON.parse(userStr) : null
 
-  // 未登录 → 跳登录页（登录页本身除外）
+  // 未登录 → 跳登录页
   if (to.meta.requiresAuth !== false && !token) {
     next('/login')
     return
@@ -140,12 +139,21 @@ router.beforeEach((to, _from, next) => {
     return
   }
 
-  // 角色权限校验
-  if (to.meta.roles && user) {
-    const allowedRoles = to.meta.roles as string[]
-    if (!allowedRoles.includes(user.role)) {
-      next('/dashboard')
-      return
+  // 已登录但权限未加载（页面刷新场景）
+  if (token) {
+    const userStore = useUserStore()
+    if (userStore.permissions.length === 0) {
+      await userStore.loadPermissions()
+    }
+
+    // 角色权限校验
+    if (to.meta.roles) {
+      const allowedRoles = to.meta.roles as string[]
+      const userRole = userStore.userInfo?.role
+      if (userRole && !allowedRoles.includes(userRole)) {
+        next('/dashboard')
+        return
+      }
     }
   }
 

@@ -4,7 +4,7 @@
     <el-aside :width="isCollapse ? '64px' : '220px'" class="aside">
       <div class="logo" @click="router.push('/dashboard')">
         <el-icon :size="24"><Briefcase /></el-icon>
-        <span v-show="!isCollapse" class="logo-text">项目管理系统</span>
+        <span v-show="!isCollapse" class="logo-text">多项目管理系统</span>
       </div>
       <el-menu
         :default-active="currentRoute"
@@ -14,58 +14,26 @@
         active-text-color="#409eff"
         router
       >
-        <el-menu-item index="/dashboard">
-          <el-icon><Odometer /></el-icon>
-          <template #title>首页概览</template>
-        </el-menu-item>
-        <el-menu-item index="/projects">
-          <el-icon><Folder /></el-icon>
-          <template #title>项目管理</template>
-        </el-menu-item>
-        <el-menu-item index="/ai-suggestions">
-          <el-icon><Cpu /></el-icon>
-          <template #title>AI风险建议</template>
-        </el-menu-item>
-        <el-menu-item index="/todos">
-          <el-icon><Finished /></el-icon>
-          <template #title>项目待办</template>
-        </el-menu-item>
-        <el-sub-menu index="operation">
-          <template #title>
-            <el-icon><DataAnalysis /></el-icon>
-            <span>运营中心</span>
-          </template>
-          <el-menu-item index="/reports">
-            <el-icon><Document /></el-icon>
-            <template #title>项目报告</template>
+        <template v-for="menu in dynamicMenus" :key="menu.permKey">
+          <!-- 有子菜单 -->
+          <el-sub-menu v-if="menu.children && menu.children.length" :index="menu.permKey">
+            <template #title>
+              <el-icon><component :is="menu.icon || 'Setting'" /></el-icon>
+              <span>{{ menu.permName }}</span>
+            </template>
+            <template v-for="child in menu.children" :key="child.permKey">
+              <el-menu-item v-if="child.type === 'menu'" :index="child.path">
+                <el-icon><component :is="child.icon || 'Document'" /></el-icon>
+                <template #title>{{ child.permName }}</template>
+              </el-menu-item>
+            </template>
+          </el-sub-menu>
+          <!-- 无子菜单 -->
+          <el-menu-item v-else-if="menu.type === 'menu' && menu.path" :index="menu.path">
+            <el-icon><component :is="menu.icon || 'Document'" /></el-icon>
+            <template #title>{{ menu.permName }}</template>
           </el-menu-item>
-          <el-menu-item index="/schedule">
-            <el-icon><Timer /></el-icon>
-            <template #title>定时任务</template>
-          </el-menu-item>
-        </el-sub-menu>
-        <el-sub-menu v-if="userStore.isDeptManager" index="system">
-          <template #title>
-            <el-icon><Setting /></el-icon>
-            <span>系统管理</span>
-          </template>
-          <el-menu-item index="/config">
-            <el-icon><Setting /></el-icon>
-            <template #title>系统配置</template>
-          </el-menu-item>
-          <el-menu-item index="/users">
-            <el-icon><UserFilled /></el-icon>
-            <template #title>用户管理</template>
-          </el-menu-item>
-          <el-menu-item index="/roles">
-            <el-icon><User /></el-icon>
-            <template #title>角色管理</template>
-          </el-menu-item>
-          <el-menu-item index="/logs">
-            <el-icon><Notebook /></el-icon>
-            <template #title>操作日志</template>
-          </el-menu-item>
-        </el-sub-menu>
+        </template>
       </el-menu>
     </el-aside>
 
@@ -174,6 +142,14 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const isCollapse = ref(false)
+
+// 动态菜单：从权限列表中提取 type=menu 的项
+const dynamicMenus = computed(() => {
+  return userStore.menuPermissions.map(p => ({
+    ...p,
+    children: (p.children || []).filter(c => c.type === 'menu'),
+  }))
+})
 
 const currentRoute = computed(() => {
   const path = route.path

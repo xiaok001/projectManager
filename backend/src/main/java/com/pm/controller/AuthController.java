@@ -2,9 +2,12 @@ package com.pm.controller;
 
 import com.pm.common.response.R;
 import com.pm.model.dto.LoginDTO;
+import com.pm.model.entity.SysPermission;
 import com.pm.model.entity.SysUser;
 import com.pm.model.vo.LoginVO;
+import com.pm.service.SysPermissionService;
 import com.pm.service.SysUserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,11 +20,19 @@ import java.util.Map;
 public class AuthController {
 
     private final SysUserService userService;
+    private final SysPermissionService permissionService;
 
     @PostMapping("/login")
     public R<LoginVO> login(@RequestBody LoginDTO dto) {
         LoginVO loginVO = userService.login(dto);
         return R.ok(loginVO);
+    }
+
+    @GetMapping("/permissions")
+    public R<List<SysPermission>> getPermissions(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        String role = (String) request.getAttribute("role");
+        return R.ok(permissionService.getUserPermissionTree(userId, role));
     }
 
     @GetMapping("/users")

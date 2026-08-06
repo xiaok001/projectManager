@@ -34,6 +34,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     private final ProjectRiskMapper projectRiskMapper;
     private final ProjectChangeLogMapper changeLogMapper;
     private final AiRiskSuggestionMapper aiSuggestionMapper;
+    private final ProjectTodoMapper projectTodoMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -199,11 +200,13 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         }
         checkViewPermission(project, userId, role);
 
-        // 级联删除：阶段、风险、变更记录、AI建议
+        // 级联删除：阶段、风险、待办、变更记录、AI建议
         projectStageMapper.delete(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ProjectStage>()
                 .eq(ProjectStage::getProjectId, id));
         projectRiskMapper.delete(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ProjectRisk>()
                 .eq(ProjectRisk::getProjectId, id));
+        projectTodoMapper.delete(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ProjectTodo>()
+                .eq(ProjectTodo::getProjectId, id));
         changeLogMapper.delete(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ProjectChangeLog>()
                 .eq(ProjectChangeLog::getProjectId, id));
         aiSuggestionMapper.delete(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<AiRiskSuggestion>()
