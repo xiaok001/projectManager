@@ -113,7 +113,20 @@
           >
             <div class="health-card-content">
               <div class="project-name">{{ project.projectName }}</div>
-              <el-popover placement="top" :width="260" trigger="hover">
+
+              <!-- 数据不足 -->
+              <el-popover v-if="!project.dataSufficient" placement="top" :width="300" trigger="hover">
+                <template #reference>
+                  <div class="health-score health-gray" style="cursor:help">—</div>
+                </template>
+                <div class="score-breakdown">
+                  <div class="score-breakdown-title">暂无可计算数据</div>
+                  <div class="score-detail">{{ project.timeDetail }}</div>
+                </div>
+              </el-popover>
+
+              <!-- 正常评分 -->
+              <el-popover v-else placement="top" :width="320" trigger="hover">
                 <template #reference>
                   <div :class="['health-score', getHealthColorClass(project.healthColor)]" style="cursor:help">
                     {{ project.healthScore }}
@@ -123,16 +136,19 @@
                   <div class="score-breakdown-title">评分构成</div>
                   <div class="score-row">
                     <span class="score-label">时间维度 (35%)</span>
-                    <span class="score-val">{{ project.timeScore ?? '-' }}</span>
+                    <span class="score-val">{{ project.timeScore }}</span>
                   </div>
+                  <div class="score-detail">{{ project.timeDetail }}</div>
                   <div class="score-row">
                     <span class="score-label">风险维度 (40%)</span>
-                    <span class="score-val">{{ project.riskScore ?? '-' }}</span>
+                    <span class="score-val">{{ project.riskScore }}</span>
                   </div>
+                  <div class="score-detail">{{ project.riskDetail }}</div>
                   <div class="score-row">
                     <span class="score-label">交付维度 (25%)</span>
-                    <span class="score-val">{{ project.deliveryScore ?? '-' }}</span>
+                    <span class="score-val">{{ project.deliveryScore }}</span>
                   </div>
+                  <div class="score-detail">{{ project.deliveryDetail }}</div>
                   <div class="score-divider"></div>
                   <div class="score-formula">
                     = {{ project.timeScore }}×35% + {{ project.riskScore }}×40% + {{ project.deliveryScore }}×25%
@@ -142,7 +158,10 @@
                   </div>
                 </div>
               </el-popover>
-              <div class="health-label">健康评分</div>
+
+              <div class="health-label">
+                {{ project.dataSufficient ? '健康评分' : '数据不足' }}
+              </div>
               <div class="current-stage">
                 <el-tag size="small">{{ project.currentStage || '暂无阶段' }}</el-tag>
               </div>
@@ -390,6 +409,7 @@ onMounted(() => {
 .health_green { color: #67c23a; }
 .health_yellow { color: #e6a23c; }
 .health_red { color: #f56c6c; }
+.health-gray { color: #c0c4cc; }
 
 .current-stage {
   margin-bottom: 12px;
@@ -433,6 +453,12 @@ onMounted(() => {
   font-size: 14px;
   color: #303133;
   margin-bottom: 10px;
+}
+.score-detail {
+  font-size: 12px;
+  color: #909399;
+  margin: -2px 0 8px 0;
+  line-height: 1.5;
 }
 .score-row {
   display: flex;

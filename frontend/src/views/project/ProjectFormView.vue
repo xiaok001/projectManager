@@ -47,15 +47,17 @@
           <el-divider content-position="left">项目状态</el-divider>
           <el-form-item label="当前状态">
             <el-select v-model="form.status" placeholder="请选择状态" style="width:200px">
+              <el-option value="未启动" label="未启动" />
               <el-option value="进行中" label="进行中" />
-              <el-option value="已暂停" label="已暂停" />
-              <el-option value="已完成" label="已完成" />
+              <el-option value="暂停" label="暂停" />
+              <el-option value="验收中" label="验收中" />
+              <el-option value="已关闭" label="已关闭" />
             </el-select>
           </el-form-item>
 
-          <!-- 选择"已完成"时的阶段检查提示 -->
+          <!-- 选择"已关闭"时的阶段检查提示 -->
           <el-alert
-            v-if="form.status === '已完成' && incompleteStages.length > 0"
+            v-if="form.status === '已关闭' && incompleteStages.length > 0"
             type="warning"
             show-icon
             :closable="false"
@@ -129,7 +131,7 @@ const rules: FormRules = {
 
 // 监听状态变更，检查未完成阶段
 watch(() => form.value.status, async (newStatus) => {
-  if (newStatus === '已完成' && isEdit.value) {
+  if (newStatus === '已关闭' && isEdit.value) {
     await checkIncompleteStages()
   } else {
     incompleteStages.value = []
@@ -140,7 +142,7 @@ async function checkIncompleteStages() {
   try {
     const res: any = await stageApi.listByProject(Number(route.params.id))
     const stages = res.data || []
-    incompleteStages.value = stages.filter((s: any) => s.status !== '已完成' && s.stageName !== '运维')
+    incompleteStages.value = stages.filter((s: any) => s.status !== '已关闭' && s.stageName !== '运维')
   } catch { /* ignore */ }
 }
 
@@ -175,12 +177,12 @@ async function handleSubmit() {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
 
-  // 选择"已完成"且有未完成阶段时，二次确认
-  if (form.value.status === '已完成' && incompleteStages.value.length > 0) {
+  // 选择"已关闭"且有未完成阶段时，二次确认
+  if (form.value.status === '已关闭' && incompleteStages.value.length > 0) {
     const stageNames = incompleteStages.value.map((s: any) => s.stageName).join('、')
     try {
       await ElMessageBox.confirm(
-        `当前项目存在未完成的阶段（${stageNames}），确定要将项目状态设为「已完成」吗？（运维阶段无需完成即可结束项目）`,
+        `当前项目存在未完成的阶段（${stageNames}），确定要将项目状态设为「已关闭」吗？（运维阶段无需完成即可结束项目）`,
         '确认结束项目',
         { confirmButtonText: '确定结束', cancelButtonText: '取消', type: 'warning' }
       )

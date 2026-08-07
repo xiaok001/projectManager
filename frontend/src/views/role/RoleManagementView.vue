@@ -37,7 +37,12 @@
             <el-button type="primary" link size="small" @click="openDialog(row)">编辑</el-button>
             <el-button type="success" link size="small" @click="openPermDialog(row)">分配权限</el-button>
             <el-button type="warning" link size="small" @click="openDataScopeDialog(row)">数据权限</el-button>
-            <el-popconfirm title="确认删除此角色？" @confirm="handleDelete(row.id)">
+            <template v-if="row.isSystem === 1">
+              <el-tooltip content="系统内置角色，不可删除" placement="top">
+                <el-button type="info" link size="small" disabled>删除</el-button>
+              </el-tooltip>
+            </template>
+            <el-popconfirm v-else title="确认删除此角色？" @confirm="handleDelete(row.id)">
               <template #reference>
                 <el-button type="danger" link size="small">删除</el-button>
               </template>

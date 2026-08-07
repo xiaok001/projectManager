@@ -39,14 +39,16 @@
     <el-card shadow="never" style="margin-top:12px">
 
       <!-- 表格 -->
-      <el-table :data="todos" v-loading="loading" stripe border>
-        <el-table-column type="index" label="序号" width="55" align="center">
+      <el-table :data="todos" v-loading="loading" stripe border style="min-width:1200px">
+        <el-table-column type="index" label="序号" width="55" align="center" fixed="left">
           <template #default="{ $index }">{{ (pageNum - 1) * pageSize + $index + 1 }}</template>
         </el-table-column>
-        <el-table-column prop="todoCode" label="待办编号" width="180" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
+        <el-table-column prop="todoCode" label="待办编号" width="180" fixed="left" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
         <el-table-column prop="projectCode" label="项目编号" width="130" />
         <el-table-column prop="title" label="待办事项" min-width="200" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
-        <el-table-column prop="stageName" label="所属阶段" width="100" />
+        <el-table-column prop="stageName" label="所属阶段" width="100">
+          <template #default="{ row }">{{ row.stageName || '-' }}</template>
+        </el-table-column>
         <el-table-column prop="priority" label="优先级" width="75" align="center">
           <template #default="{ row }">
             <el-tag :type="row.priority==='高'?'danger':row.priority==='中'?'warning':'info'" size="small">{{ row.priority }}</el-tag>
@@ -57,8 +59,12 @@
             <el-tag :type="row.urgency==='特急'?'danger':row.urgency==='紧急'?'warning':''" size="small">{{ row.urgency }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="ownerName" label="负责人" width="85" />
-        <el-table-column prop="planEnd" label="计划完成" width="105" />
+        <el-table-column label="负责人" width="90">
+          <template #default="{ row }">{{ row.ownerName || '未分配' }}</template>
+        </el-table-column>
+        <el-table-column prop="planEnd" label="计划完成" width="105">
+          <template #default="{ row }">{{ row.planEnd || '-' }}</template>
+        </el-table-column>
         <el-table-column label="进度" width="100">
           <template #default="{ row }">
             <el-progress :percentage="row.progress||0" :stroke-width="14" :text-inside="true" />

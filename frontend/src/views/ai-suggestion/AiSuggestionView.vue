@@ -42,21 +42,21 @@
 
     <!-- 列表 -->
     <el-card shadow="never" style="margin-top:12px">
-      <el-table :data="suggestions" v-loading="loading" stripe border>
-        <el-table-column type="index" label="序号" width="60" align="center">
+      <el-table :data="suggestions" v-loading="loading" stripe border style="min-width:1100px">
+        <el-table-column type="index" label="序号" width="55" align="center" fixed="left">
           <template #default="{ $index }">{{ (pageNum - 1) * pageSize + $index + 1 }}</template>
         </el-table-column>
-        <el-table-column prop="projectCode" label="项目编号" width="140" />
-        <el-table-column prop="projectName" label="项目名称" width="160" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
+        <el-table-column prop="projectCode" label="项目编号" width="130" fixed="left" />
+        <el-table-column prop="projectName" label="项目名称" width="150" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
         <el-table-column prop="sourceText" label="原始备注" min-width="220" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
         <el-table-column prop="suggestedRiskDesc" label="AI建议风险描述" min-width="260" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
-        <el-table-column prop="status" label="状态" width="90" align="center">
+        <el-table-column label="状态" width="90" align="center">
           <template #default="{ row }">
             <el-tag :type="statusTagType(row.status)" size="small">{{ row.status }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="createdAt" label="创建时间" width="170" />
-        <el-table-column label="操作" width="160" align="center" fixed="right">
+        <el-table-column label="操作" width="150" align="center" fixed="right">
           <template #default="{ row }">
             <template v-if="row.status === '待确认'">
               <el-button type="primary" size="small" link @click="handleAccept(row.id)">采纳登记</el-button>

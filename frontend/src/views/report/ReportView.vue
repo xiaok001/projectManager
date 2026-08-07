@@ -218,7 +218,7 @@ async function generateReport() {
   // 检查选中的项目是否已结束
   if (selectedProject.value) {
     const p = projects.value.find((x: any) => x.id === selectedProject.value)
-    if (p && p.status === '已完成') {
+    if (p && p.status === '已关闭') {
       try {
         await ElMessageBox.confirm(
           `项目「${p.name}」已处于结束状态，生成的周报可能无最新数据。是否继续生成？`,

@@ -184,17 +184,42 @@ async function handleToggle(row: any) {
   } catch { /* handled */ }
 }
 
+// 任务影响说明映射
+const taskImpactMap: Record<string, string> = {
+  refreshDelayedStages: '将扫描全部项目阶段，自动标记计划已过期但未完成的阶段为"已延期"',
+  refreshStaleRisks: '将扫描全部未关闭风险，自动标记超过阈值天数未更新的风险为"停滞"',
+  refreshOverdueTodos: '将扫描全部待处理待办，逾期待办将自动创建对应的风险记录',
+  nightlyAiRiskScan: '将扫描全部进行中项目的阶段备注，调用AI识别潜在风险（耗时取决于项目数量）',
+  dailyTodoAndRiskDigest: '将汇总全部项目的待办和风险，生成日报邮件发送给配置的收件人',
+  dailyDigest: '将汇总Dashboard数据，调用AI生成自然语言摘要，发送邮件给配置的收件人',
+}
+
 async function handleRun(row: any) {
+  const impact = taskImpactMap[row.taskKey] || row.description || '执行指定任务'
   try {
-    await ElMessageBox.confirm(`确认立即执行「${row.taskName}」？`, '手动执行', {
-      confirmButtonText: '立即执行', cancelButtonText: '取消', type: 'info',
-    })
+    await ElMessageBox.confirm(
+      `<div style="line-height:1.8">
+        <p><b>任务名称：</b>${row.taskName}</p>
+        <p><b>影响范围：</b>${impact}</p>
+        <p style="color:#909399;font-size:12px;margin-top:8px">Cron频率：${row.cronExpr}</p>
+      </div>`,
+      '确认手动执行',
+      {
+        confirmButtonText: '立即执行',
+        cancelButtonText: '取消',
+        type: 'info',
+        dangerouslyUseHTMLString: true,
+        customStyle: { maxWidth: '480px' },
+      }
+    )
     row._running = true
     const res: any = await scheduledTaskApi.run(row.id)
-    ElMessage.success(res.message || '执行完成')
     row._running = false
+    ElMessage.success({ message: res.message || '执行完成', duration: 5000 })
     loadLogs()
-  } catch { row._running = false }
+  } catch {
+    row._running = false
+  }
 }
 
 function showLogs(row: any) {

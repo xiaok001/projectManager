@@ -10,7 +10,7 @@ public interface ProjectService extends IService<Project> {
     Project createProject(ProjectDTO dto, Long operatorId);
     Project updateProject(Long id, ProjectDTO dto, Long operatorId);
     List<Project> listProjects(Long userId, String role);
-    List<Project> listProjects(Long userId, String role, String name, String projectCode, Integer level);
+    List<Project> listProjects(Long userId, String role, String name, String projectCode, Integer level, String status);
     Project getProjectDetail(Long id, Long userId, String role);
     void updateSatisfaction(Long id, Integer score, Long userId, String role);
     void deleteProject(Long id, Long userId, String role);

@@ -237,6 +237,7 @@ CREATE TABLE IF NOT EXISTS sys_role (
     status          TINYINT         DEFAULT 1,
     remark          VARCHAR(200)    DEFAULT NULL,
     data_scope      VARCHAR(20)     DEFAULT 'all' COMMENT '数据权限: all=全部项目 custom=指定项目',
+    is_system       TINYINT         DEFAULT 0 COMMENT '是否内置角色: 1是 0否',
     created_at      DATETIME        DEFAULT CURRENT_TIMESTAMP,
     updated_at      DATETIME        DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
@@ -358,10 +359,10 @@ INSERT INTO system_config (config_key, config_value, description) VALUES
 -- -----------------------------------------------------------
 -- 默认角色
 -- -----------------------------------------------------------
-INSERT INTO sys_role (id, role_name, role_key, sort_order, remark, data_scope) VALUES
-    (1, '超级管理员', 'admin',   1, '拥有所有权限',          'all'),
-    (2, '项目经理',   'pm',      2, '管理自己负责的项目',    'custom'),
-    (3, '查看者',     'viewer',  3, '只读权限',              'all');
+INSERT INTO sys_role (id, role_name, role_key, sort_order, remark, data_scope, is_system) VALUES
+    (1, '超级管理员', 'admin',   1, '拥有所有权限',          'all', 1),
+    (2, '项目经理',   'pm',      2, '管理自己负责的项目',    'custom', 1),
+    (3, '查看者',     'viewer',  3, '只读权限',              'all', 1);
 
 -- -----------------------------------------------------------
 -- 权限数据

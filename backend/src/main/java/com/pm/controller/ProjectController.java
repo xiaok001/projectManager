@@ -45,10 +45,11 @@ public class ProjectController {
             HttpServletRequest request,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String projectCode,
-            @RequestParam(required = false) Integer level) {
+            @RequestParam(required = false) Integer level,
+            @RequestParam(required = false) String status) {
         Long userId = (Long) request.getAttribute("userId");
         String role = (String) request.getAttribute("role");
-        return R.ok(projectService.listProjects(userId, role, name, projectCode, level));
+        return R.ok(projectService.listProjects(userId, role, name, projectCode, level, status));
     }
 
     @GetMapping("/{id}")

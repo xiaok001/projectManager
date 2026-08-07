@@ -160,7 +160,7 @@ public class EmailDigestServiceImpl extends ServiceImpl<EmailDigestLogMapper, Em
 
         try {
             List<Project> allProjects = projectService.lambdaQuery()
-                    .in(Project::getStatus, "进行中", "已完成")
+                    .in(Project::getStatus, "进行中", "已关闭")
                     .orderByAsc(Project::getProjectCode)
                     .list();
 

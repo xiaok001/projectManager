@@ -26,38 +26,39 @@
         </div>
       </template>
 
-      <el-table :data="logs" v-loading="loading" stripe border>
-        <el-table-column prop="id" label="ID" width="60" />
-        <el-table-column prop="module" label="操作模块" width="90">
+      <el-table :data="logs" v-loading="loading" stripe border style="min-width:1100px">
+        <el-table-column prop="id" label="ID" width="60" fixed="left" />
+        <el-table-column label="操作模块" width="90" align="center">
           <template #default="{ row }">
             <el-tag size="small">{{ row.module }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="operation" label="操作类型" width="80">
+        <el-table-column label="操作类型" width="80" align="center">
           <template #default="{ row }">
-            <el-tag
-              size="small"
-              :type="opTagType(row.operation)"
-            >{{ row.operation }}</el-tag>
+            <el-tag size="small" :type="opTagType(row.operation)">{{ row.operation }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="description" label="操作描述" min-width="200" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
-        <el-table-column prop="operatorName" label="操作人" width="90" />
-        <el-table-column prop="requestMethod" label="方法" width="70">
+        <el-table-column prop="description" label="操作描述" min-width="200" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }">
+          <template #default="{ row }">{{ row.description || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="操作人" width="90">
+          <template #default="{ row }">{{ row.operatorName || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="方法" width="70" align="center">
           <template #default="{ row }">
-            <el-tag
-              size="small"
-              :type="methodTagType(row.requestMethod)"
-              effect="plain"
-            >{{ row.requestMethod }}</el-tag>
+            <el-tag size="small" :type="methodTagType(row.requestMethod)" effect="plain">{{ row.requestMethod }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="requestUrl" label="请求路径" min-width="220" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
-        <el-table-column prop="ip" label="IP" width="130" />
-        <el-table-column prop="executionTime" label="耗时" width="80">
+        <el-table-column prop="requestUrl" label="请求路径" min-width="220" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }">
+          <template #default="{ row }">{{ row.requestUrl || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="IP" width="130">
+          <template #default="{ row }">{{ row.ip || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="耗时" width="80" align="right">
           <template #default="{ row }">
             <span :style="{ color: row.executionTime > 1000 ? '#f56c6c' : '' }">
-              {{ row.executionTime }}ms
+              {{ row.executionTime || 0 }}ms
             </span>
           </template>
         </el-table-column>

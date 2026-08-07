@@ -660,7 +660,7 @@ const uploadingFile = ref(false)
 // --- Helpers ---
 const levelTagType = (level: number) => ({ 0: 'danger', 1: 'warning', 2: 'info' }[level] ?? 'info')
 const levelLabel = (level: number) => ({ 0: 'P0', 1: 'P1', 2: 'P2' }[level] ?? `P${level}`)
-const statusTagType = (s: string) => ({ '进行中': 'primary', '已完成': 'success', '已暂停': 'info' }[s] ?? 'info')
+const statusTagType = (s: string) => ({ '进行中': 'primary', '已关闭': 'success', '暂停': 'warning', '验收中': 'warning', '未启动': 'info' }[s] ?? 'info')
 const stageStatusType = (s: string) => ({ '未开始': 'info', '进行中': 'primary', '已完成': 'success', '已延期': 'danger' }[s] ?? 'info')
 const severityType = (s: string) => ({ '高': 'danger', '中': 'warning', '低': 'info' }[s] ?? 'info')
 const riskStatusType = (s: string) => ({ '待处理': 'danger', '处理中': 'warning', '已解决': 'success', '已关闭': 'info' }[s] ?? 'info')

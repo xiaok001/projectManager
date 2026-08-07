@@ -90,9 +90,9 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         project.setExpectedEndDate(dto.getExpectedEndDate());
         if (dto.getWbsOnlineUrl() != null) project.setWbsOnlineUrl(dto.getWbsOnlineUrl());
 
-        // 状态变更校验：如果要改为"已完成"，检查是否有未完成的阶段
-        if (dto.getStatus() != null && "已完成".equals(dto.getStatus())
-                && !"已完成".equals(project.getStatus())) {
+        // 状态变更校验：如果要改为"已关闭"，检查是否有未完成的阶段
+        if (dto.getStatus() != null && "已关闭".equals(dto.getStatus())
+                && !"已关闭".equals(project.getStatus())) {
             List<ProjectStage> stages = projectStageService.listByProjectId(id);
             boolean hasIncomplete = stages.stream()
                     .filter(s -> !"运维".equals(s.getStageName()))
@@ -113,11 +113,11 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
 
     @Override
     public List<Project> listProjects(Long userId, String role) {
-        return listProjects(userId, role, null, null, null);
+        return listProjects(userId, role, null, null, null, null);
     }
 
     @Override
-    public List<Project> listProjects(Long userId, String role, String name, String projectCode, Integer level) {
+    public List<Project> listProjects(Long userId, String role, String name, String projectCode, Integer level, String status) {
         LambdaQueryWrapper<Project> wrapper = new LambdaQueryWrapper<>();
 
         // 数据权限过滤
@@ -146,6 +146,9 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         }
         if (level != null) {
             wrapper.eq(Project::getLevel, level);
+        }
+        if (status != null && !status.isEmpty()) {
+            wrapper.eq(Project::getStatus, status);
         }
 
         wrapper.orderByDesc(Project::getCreatedAt);

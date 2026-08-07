@@ -35,6 +35,15 @@
             <el-option label="P2" :value="2" />
           </el-select>
         </el-form-item>
+        <el-form-item label="业务状态">
+          <el-select v-model="searchForm.status" placeholder="全部" clearable style="width:120px" @change="handleSearch">
+            <el-option value="未启动" label="未启动" />
+            <el-option value="进行中" label="进行中" />
+            <el-option value="暂停" label="暂停" />
+            <el-option value="验收中" label="验收中" />
+            <el-option value="已关闭" label="已关闭" />
+          </el-select>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">
             <el-icon><Search /></el-icon> 查询
@@ -47,35 +56,37 @@
     </el-card>
 
     <!-- 项目表格 -->
-    <el-card shadow="never" style="margin-top:12px">
-      <el-table v-loading="loading" :data="pagedList" border stripe style="width:100%">
-        <el-table-column prop="projectCode" label="项目编号" width="140" />
+    <el-card shadow="never" style="margin-top:12px;overflow-x:auto">
+      <el-table v-loading="loading" :data="pagedList" border stripe style="min-width:1100px">
+        <el-table-column prop="projectCode" label="项目编号" width="130" fixed="left" />
         <el-table-column prop="name" label="项目名称" min-width="180" :show-overflow-tooltip="{ popperClass: 'pm-tooltip' }" />
-        <el-table-column prop="type" label="类型" width="100" />
-        <el-table-column label="等级" width="80" align="center">
+        <el-table-column prop="type" label="类型" width="90" />
+        <el-table-column label="等级" width="70" align="center">
           <template #default="{ row }">
-            <el-tag :type="levelTagType(row.level)" disable-transitions>{{ levelLabel(row.level) }}</el-tag>
+            <el-tag :type="levelTagType(row.level)" size="small" disable-transitions>{{ levelLabel(row.level) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="金额" width="120" align="right">
+        <el-table-column label="金额" width="110" align="right">
           <template #default="{ row }">
             {{ row.amount != null ? `¥${Number(row.amount).toLocaleString()}` : '-' }}
           </template>
         </el-table-column>
-        <el-table-column prop="pmName" label="项目经理" width="100" />
-        <el-table-column label="状态" width="90" align="center">
+        <el-table-column label="项目经理" width="100">
+          <template #default="{ row }">{{ row.pmName || '未分配' }}</template>
+        </el-table-column>
+        <el-table-column label="业务状态" width="90" align="center">
           <template #default="{ row }">
-            <el-tag :type="statusTagType(row.status)" disable-transitions>{{ row.status }}</el-tag>
+            <el-tag :type="statusTagType(row.status)" size="small" disable-transitions>{{ row.status }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="currentStage" label="当前阶段" width="120" />
-        <el-table-column prop="startDate" label="启动日期" width="110" />
-        <el-table-column prop="opsStartDate" label="结束日期" width="110">
-          <template #default="{ row }">
-            {{ row.opsStartDate || '-' }}
-          </template>
+        <el-table-column prop="currentStage" label="当前阶段" width="110">
+          <template #default="{ row }">{{ row.currentStage || '-' }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="200" align="center" fixed="right">
+        <el-table-column prop="startDate" label="启动日期" width="105" />
+        <el-table-column prop="opsStartDate" label="结束日期" width="105">
+          <template #default="{ row }">{{ row.opsStartDate || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="180" align="center" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link @click="router.push(`/projects/${row.id}`)">详情</el-button>
             <el-button type="warning" link @click="router.push(`/projects/${row.id}/edit`)">编辑</el-button>
@@ -126,6 +137,7 @@ const searchForm = reactive({
   name: '',
   projectCode: '',
   level: null as number | null,
+  status: '',
 })
 
 const pagedList = computed(() => {
@@ -135,7 +147,7 @@ const pagedList = computed(() => {
 
 const levelTagType = (level: number) => ({ 0: 'danger', 1: 'warning', 2: 'info' }[level] ?? 'info')
 const levelLabel = (level: number) => ({ 0: 'P0', 1: 'P1', 2: 'P2' }[level] ?? `P${level}`)
-const statusTagType = (s: string) => ({ '进行中': 'primary', '已完成': 'success', '已暂停': 'info' }[s] ?? 'info')
+const statusTagType = (s: string) => ({ '进行中': 'primary', '已关闭': 'success', '暂停': 'warning', '验收中': 'warning', '未启动': 'info' }[s] ?? 'info')
 
 async function fetchProjects() {
   loading.value = true
@@ -144,6 +156,7 @@ async function fetchProjects() {
     if (searchForm.name) params.name = searchForm.name
     if (searchForm.projectCode) params.projectCode = searchForm.projectCode
     if (searchForm.level !== null && searchForm.level !== undefined) params.level = searchForm.level
+    if (searchForm.status) params.status = searchForm.status
 
     const res: any = await projectApi.list(params)
     projectList.value = res.data ?? []
@@ -160,6 +173,7 @@ function handleReset() {
   searchForm.name = ''
   searchForm.projectCode = ''
   searchForm.level = null
+  searchForm.status = ''
   currentPage.value = 1
   fetchProjects()
 }

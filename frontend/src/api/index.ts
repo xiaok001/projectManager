@@ -65,7 +65,7 @@ export const authApi = {
 
 // ============ 项目接口 ============
 export const projectApi = {
-  list: (params?: { name?: string; projectCode?: string; level?: number }) =>
+  list: (params?: { name?: string; projectCode?: string; level?: number; status?: string }) =>
     api.get('/projects', { params }),
   detail: (id: number) => api.get(`/projects/${id}`),
   create: (data: any) => api.post('/projects', data),

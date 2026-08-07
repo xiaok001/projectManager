@@ -24,8 +24,10 @@ public final class Constants {
     // ======================== Project Status ========================
 
     public static final String STATUS_ACTIVE = "进行中";
-    public static final String STATUS_COMPLETED = "已完成";
-    public static final String STATUS_PAUSED = "已暂停";
+    public static final String STATUS_COMPLETED = "已关闭";
+    public static final String STATUS_NOT_STARTED = "未启动";
+    public static final String STATUS_PAUSED = "暂停";
+    public static final String STATUS_ACCEPTANCE = "验收中";
 
     // ======================== Stage Status ========================
 

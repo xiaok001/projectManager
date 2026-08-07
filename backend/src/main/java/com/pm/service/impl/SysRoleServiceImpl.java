@@ -57,6 +57,9 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     public void deleteRole(Long id) {
         SysRole role = getById(id);
         if (role == null) throw new BusinessException("角色不存在");
+        if (Integer.valueOf(1).equals(role.getIsSystem())) {
+            throw new BusinessException("系统内置角色不可删除");
+        }
         // 检查是否有用户使用此角色
         long userCount = userMapper.selectCount(
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<SysUser>()
